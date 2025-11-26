@@ -1,9 +1,13 @@
 #pragma once
 
+#include <cassert>
 #include <istream>
 #include <map>
 #include <string>
 #include <vector>
+
+// 用于描述 PdCode 中的一个交叉点的信息
+#include "PDCrossing.h"
 
 // 描述一个扭结的 PD_CODE
 // 其中关键为：有 n 个 crossing 描述符
@@ -21,8 +25,32 @@ private:
 
 public:
 
+    // 一个默认的 pd_code 有零个交叉点
+    // 这样的 pd_code 不可以参与各种运算
+    PDCode(): n(0), pd_code({}) {
+    }
+
+    // 获取 pd_code 的交叉点个数
+    // 如果返回值为 0 说明这个 pd_code 对象还没有初始化
+    int getCrossingNumber() const {
+        return n;
+    }
+
+    // 使用交叉点编号获取一个交叉点信息
+    PDCrossing getCrossing(int idx) const {
+
+        // 零个交叉点的 PDCode 说明未初始化，不可以获取交叉点信息
+        assert(getCrossingNumber() != 0);
+
+        // 合法的交叉点编号范围是 0 ~ n-1 闭区间
+        assert(0 <= idx && idx < getCrossingNumber());
+        
+        // 直接构建一个 PDCrossing 对象返回即可
+        return PDCrossing(pd_code[idx]);
+    }
+
     // 从指定输入流输入一个 pd_code 并判断这个扭结是否合法，如果不合法返回 false
-    bool input_pd_code(std::istream& input_stream) {
+    bool InputPdCode(std::istream& input_stream) {
 
         // 清空原来记录的扭结信息
         pd_code.clear()

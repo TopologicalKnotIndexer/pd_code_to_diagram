@@ -11,7 +11,7 @@
 int main() {
 
     PDCode pd_code;
-    pd_code.input_pd_code();
+    pd_code.InputPdCode();
     
     return 0;
 }
