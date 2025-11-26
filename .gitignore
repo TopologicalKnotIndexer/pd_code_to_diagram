@@ -1,3 +1,6 @@
+# Project Settings
+.vscode/*.json
+
 # Prerequisites
 *.d
 
