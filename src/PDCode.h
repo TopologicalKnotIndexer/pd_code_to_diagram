@@ -36,11 +36,16 @@ public:
         return n;
     }
 
-    // 使用交叉点编号获取一个交叉点信息
-    PDCrossing getCrossing(int idx) const {
-
+    // 检查当前对象是否正常，如果当前对象异常则 assert 报错
+    void sanityCheck() const {
+        
         // 零个交叉点的 PDCode 说明未初始化，不可以获取交叉点信息
         assert(getCrossingNumber() != 0);
+    }
+
+    // 使用交叉点编号获取一个交叉点信息
+    PDCrossing getCrossing(int idx) const {
+        sanityCheck();
 
         // 合法的交叉点编号范围是 0 ~ n-1 闭区间
         assert(0 <= idx && idx < getCrossingNumber());

@@ -3,6 +3,8 @@
 #include <cassert>
 #include <vector>
 
+#include "Direction.h"
+
 // 在 PDCode 中
 // 用于描述一个交叉点的信息
 class PDCrossing {
@@ -18,6 +20,7 @@ public:
         assert(crs.size() == 4);
     }
 
+    // 检查当前对象是否正常，如果当前对象异常则 assert 报错
     void sanityCheck() const {
 
         // 如果 crs.size() 为零，说明这个对象尚未初始化
@@ -38,5 +41,13 @@ public:
             }
         }
         return false;
+    }
+
+    // 假设我们将 “下方进入 socket” 旋转到 base 方向
+    // 计算当前 Crossing 位于 aim 方向上的 socket 编号
+    int getSocketIdByDirection(Direction base, Direction aim) const {
+
+        // 没写完
+        assert(false); 
     }
 };
