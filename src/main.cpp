@@ -5,14 +5,17 @@
 // 这个功能用于编译 .so 或者 .dll 文件
 //#define NO_MAIN 
 
+#include <iostream>
+
 #include "PDCode.h"
 
 #ifndef NO_MAIN // 如果 NO_MAIN 标志存在，则不编译 main 函数
 int main() {
 
     PDCode pd_code;
-    pd_code.InputPdCode();
-    
+    pd_code.InputPdCode(std::cin);
+
+    std::cout << pd_code.toString() << std::endl;
     return 0;
 }
 #endif

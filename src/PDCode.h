@@ -51,14 +51,36 @@ public:
         assert(0 <= idx && idx < getCrossingNumber());
         
         // 直接构建一个 PDCrossing 对象返回即可
-        return PDCrossing(pd_code[idx]);
+        PDCrossing pd_crossing;
+        pd_crossing.load(pd_code[idx]);
+        return pd_crossing;
+    }
+
+    // 序列化，我们不建议修改下面的参数，但是用户可以根据需要修改它
+    std::string toString(
+        std::string before_code="PD",
+        std::string before_item="X",
+        std::string begin_item="[", 
+        std::string sep=", ", 
+        std::string end_item="]") const {
+        
+        sanityCheck();
+        std::string ans = before_code + begin_item; // 加载起始符号
+        
+        for(int i = 0; i < n; i += 1) {
+            ans += getCrossing(i).toString(before_item, begin_item, sep, end_item);
+            if(i != n-1) {
+                ans += sep;
+            }
+        }
+        return ans + end_item; // 加载结束符号
     }
 
     // 从指定输入流输入一个 pd_code 并判断这个扭结是否合法，如果不合法返回 false
     bool InputPdCode(std::istream& input_stream) {
 
         // 清空原来记录的扭结信息
-        pd_code.clear()
+        pd_code.clear();
 
         // cnt[i] 用于统计编号为 i 的插头出现了多少次
         // 每个插头应当恰好出现两次扭结才合法
@@ -69,10 +91,10 @@ public:
 
         // 对于每一个交叉点，依次输入 PD_CODE 中的四个插头
         // 输入的顺序是从下方进入边编号开始逆时针顺序遍历四个插头的编号
-        for(int i = 0; i < N; i += 1) {
+        for(int i = 0; i < n; i += 1) {
             
             // 输入一个交叉点处的四个插头
-            std::vetor<int> crs;
+            std::vector<int> crs;
             for(int j = 0; j < 4; j += 1) {
                 int idx;
                 input_stream >> idx;

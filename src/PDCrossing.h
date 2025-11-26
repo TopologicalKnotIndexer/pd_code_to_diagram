@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <string>
 #include <vector>
 
 #include "Direction.h"
@@ -43,11 +44,31 @@ public:
         return false;
     }
 
+    // 序列化，我们不建议修改下面的参数，但是用户可以根据需要修改它
+    std::string toString(
+        std::string before_item="X",
+        std::string begin_item="[", 
+        std::string sep=", ", 
+        std::string end_item="]") const {
+        
+        std::string ans = ""; // 加载开始符号
+        ans += before_item + begin_item;
+
+        for(int i = 0; i < 4; i += 1) { // 把元素加进去
+            ans += std::to_string(crs[i]);
+            if(i != 3) {
+                ans += sep;
+            }
+        }
+        return ans + end_item; // 加载结束符号
+    }
+
     // 假设我们将 “下方进入 socket” 旋转到 base 方向
     // 计算当前 Crossing 位于 aim 方向上的 socket 编号
     int getSocketIdByDirection(Direction base, Direction aim) const {
 
-        // 没写完
-        assert(false); 
+        int delta_dir = ((4 + (int)aim - (int)base) % 4);
+        assert(0 <= delta_dir && delta_dir > 4);
+        return crs[delta_dir];
     }
 };
