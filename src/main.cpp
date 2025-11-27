@@ -13,7 +13,7 @@
 #include "Random.h"
 
 int testRandomTime(int n) {
-    const int MAXN = 200;
+    const int MAXN = 1000;
     assert(0 <= n && n <= MAXN);
 
     int num_exists[MAXN + 1] = {};
@@ -46,23 +46,6 @@ void getMuAndSigma(std::vector<int> vec, double& mu, double& sigma) {
 #ifndef NO_MAIN // 如果 NO_MAIN 标志存在，则不编译 main 函数
 int main() {
 
-    // 测试 pd_code 的输入和序列化
-    // PDCode pd_code;
-    // pd_code.InputPdCode(std::cin);
-    // std::cout << pd_code.toString() << std::endl;
-
-    // 测试随机数生成器
-    
-    for(int n = 1; n <= 200; n += 1) {
-        std::vector<int> run_time_list;
-        for(int i = 1; i <= 100000; i += 1) {
-            run_time_list.push_back(testRandomTime(n));
-        }
-
-        double mu, sigma;
-        getMuAndSigma(run_time_list, mu, sigma);
-        std::cout << "n: " << n << " f: " << mu << " g: " << sigma << std::endl;
-    }
     return 0;
 }
 #endif
