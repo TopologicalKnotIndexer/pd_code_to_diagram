@@ -13,6 +13,8 @@ private:
     Coord2dType x, y;
 
 public:
+    // 浮点误差
+    static const Coord2dType EPS = 1e-7;
 
     // 读取变量中的坐标信息
     Coord2dType getX() const {return x;}
@@ -72,8 +74,23 @@ public:
         return Coord2dPosition(pos1.x + pos2.x, pos1.y + pos2.y);
     }
 
+    // 计算坐标位置之间的减法（向量减法）
+    static Coord2dPosition sub(Coord2dPosition pos1, Coord2dPosition pos2) {
+        return Coord2dPosition(pos1.x - pos2.x, pos1.y - pos2.y);
+    }
+
     // 计算坐标位置之间的点乘积
     static Coord2dType dot(Coord2dPosition pos1, Coord2dPosition pos2) {
         return pos1.x * pos2.x, pos1.y * pos2.y;
+    }
+
+    // 计算坐标位置是否相等
+    static bool same(Coord2dPosition pos1, Coord2dPosition pos2) {
+        return std::abs(pos1.x - pos2.x) < EPS && std::abs(pos1.y - pos2.y) < EPS ;
+    }
+
+    // 计算两个节点之间的距离
+    static Coord2dType distance(Coord2dPosition pos1, Coord2dPosition pos2) {
+        return sub(pos1, pos2).len();
     }
 };

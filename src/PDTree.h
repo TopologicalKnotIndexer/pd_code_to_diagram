@@ -93,6 +93,46 @@ private:
         double right = 0;
     };
 
+    // 观察当前是否已经有节点占据了 new_pos 这个位置
+    // 如果有则返回一个较大的惩罚
+    // 如果没有则返回 0
+    double calcPositionPunish(Coord2dPosition new_pos) const {
+        const auto N = (pd_code.getCrossingNumber() + 1);
+
+        // 这里需要跳过零号节点，因为零号节点并不是真正意义上的节点
+        for(int i = 1; i < structure.size(); i += 1) {
+            if(Coord2dPosition::same(structure[i].pos2d, new_pos)) {
+                return N * N;
+            }
+        }
+
+        // 没有找到重合的节点
+        return 0;
+    }
+
+    // 观察当前是否有一个存在的节点到 new_pos 的距离小于等于 1
+    // 如果有则返回一个比较大的惩罚
+    // 如果没有则返回 0
+    // 由于父亲节点到子节点的距离总是 1，因此需要跳过父亲节点
+    double calcNearPunish(int fa_id, Coord2dPosition new_pos) const {
+        const auto N = (pd_code.getCrossingNumber() + 1);
+
+        // 这里需要跳过零号节点，因为零号节点并不是真正意义上的节点
+        for(int i = 1; i < structure.size(); i += 1) {
+
+            // 跳过父亲节点
+            if(i == fa_id) {
+                continue;
+            }
+            if(Coord2dPosition::distance(structure[i].pos2d, new_pos) <= 1 + Coord2dPosition::EPS) {
+                return 2 * N;
+            }
+        }
+
+        // 没有找到重合的节点
+        return 0;
+    }
+
     // 遍历整颗树
     // leaf_id_map 将记录一些关于树上空闲插头的信息
     // 具体参考 getBestSocket 函数前的注释
@@ -111,7 +151,13 @@ private:
                     // 删除过去出现的记录
                     leaf_id_map.erase(leaf_id_map.lower_bound(socket_id));
                 }else {
-                    
+
+                    // 计算当前 socket 如果拓展
+                    // 得到的新节点的位置
+                    auto new_pos = Coord2dPosition::add(
+                            structure[x].pos2d,
+                            Coord2dPosition::getDeltaPositionByDirection((Direction)i));
+
                     // 说明这个 socket_id 过去没有出现过
                     // 记录当前 socket 的详细信息
                     leaf_id_map[socket_id] = (LeafInfo){
@@ -122,12 +168,15 @@ private:
                         // 关于权重的解释
                         // 1. 我们希望优先拓展离原点更远的节点
                         // 2. 对于同一个节点的多个 socket 优先拓展方向与节点位置坐标一致的 socket
+                        // 3. 如果新生成的节点位置有人占据，则施加较大的惩罚
+                        // 4. 如果新生成的节点，距离某个（不是父亲的）节点距离小于等于 1，也要施加惩罚
                         .right = (
                             structure[x].pos2d.len() + 
                             Coord2dPosition::dot(
                                 structure[x].pos2d.unit(),
                                 Coord2dPosition::getDeltaPositionByDirection((Direction)i)) * 0.5
-                        )
+                            + calcPositionPunish(new_pos)
+                            + calcNearPunish(x, new_pos))
                     };
                 }
 
