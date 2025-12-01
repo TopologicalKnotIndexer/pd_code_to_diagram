@@ -1,9 +1,11 @@
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 #include <vector>
 
+#include "Coord2dPosition.h"
 #include "Direction.h"
 #include "PDCrossing.h"
 #include "PDCode.h"
@@ -13,7 +15,7 @@
 // 四个方向与 Direction 类中的方向定义一致
 struct TreeNode {
     int next_node[4] {};
-    int tmpx = 0, tmpy = 0; // 记录临时坐标
+    Coord2dPosition pos2d; // 描述布局后节点所处的整数坐标
 
     // 获得某个指定方向上的下一个节点的编号
     int getIdOnDirection(Direction dir) const {
@@ -85,11 +87,15 @@ private:
         int node_id;   // 叶子节点 id
         Direction dir; // 当前 socket 所处在的叶子节点的方向
         int socket_id; // 当前 socket 自身的编号
+
+        // 描述某一个 socket 的优先权重
+        // 在使用 socket 的时候，总是使用优先权重大的 socket 进行拓展
+        double right = 0;
     };
 
     // 遍历整颗树
     // leaf_id_map 将记录一些关于树上空闲插头的信息
-    // 具体参考 getRandomSocket 函数前的注释
+    // 具体参考 getBestSocket 函数前的注释
     void dfs(int x, int fa, std::map<int, LeafInfo>& leaf_id_map) {
         for(int i = 0; i < 4; i += 1) {
             if(structure[x].next_node[i] == fa) { // 避免对父节点进行递归
@@ -111,7 +117,17 @@ private:
                     leaf_id_map[socket_id] = (LeafInfo){
                         .node_id = x,
                         .dir = (Direction)i,
-                        .socket_id = socket_id
+                        .socket_id = socket_id,
+
+                        // 关于权重的解释
+                        // 1. 我们希望优先拓展离原点更远的节点
+                        // 2. 对于同一个节点的多个 socket 优先拓展方向与节点位置坐标一致的 socket
+                        .right = (
+                            structure[x].pos2d.len() + 
+                            Coord2dPosition::dot(
+                                structure[x].pos2d.unit(),
+                                Coord2dPosition::getDeltaPositionByDirection((Direction)i)) * 0.5
+                        )
                     };
                 }
 
@@ -120,26 +136,37 @@ private:
             }
         }
     }
+    
+    // 用于为所有 socket 排序
+    // 从而确定不同 socket 进行拓展的优劣
+    // 按照 right 值从大到小排序
+    static bool sortLeafList(LeafInfo li1, LeafInfo li2) {
+        return li1.right > li2.right;
+    }
 
-    // 选择一个可用的随机 socket
+    // 选择一个可用的 socket
     // 1. 这个 socket 目前必须是空闲的
     // 2. 这个 socket 对应的编号，目前在树上恰出现一次
-    LeafInfo getRandomSocket(int root) {
+    // 3. 如果有多个可用的，优先选择 right 最大的 socket
+    LeafInfo getBestSocket(int root) {
         // leaf_id_map 第一次遇到某个 socket_id 时
         // leaf_id_map[socket_id] 赋值为这个 socket 的 LeafInfo
         // 第二次遇到同样的 socket_id 时，在 leaf_id_map 上删除 leaf_id_map[socket_id]
         std::map<int, LeafInfo> leaf_id_map;
         dfs(root, -1, leaf_id_map); // 这里的 fa 如果设为 0 会导致错误跳过一些分支
 
-        // 如果没有空闲的插头，说明树已经建完，不可以再调用 getRandomSocket
+        // 如果没有空闲的插头，说明树已经建完，不可以再调用 getBestSocket
         assert(leaf_id_map.size() > 0);
 
-        // 对 leaf_id_map 序列化，以便于随机取一个元素出来
+        // 对 leaf_id_map 序列化，以便于排序取一个元素出来
         std::vector<LeafInfo> leaf_id_list;
         for(auto pr: leaf_id_map) {
             leaf_id_list.push_back(pr.second);
         }
-        return leaf_id_list[randomInt(0, leaf_id_list.size() - 1)];
+
+        // 按 right 从大到小排序后，取第一个元素
+        std::sort(leaf_id_list.begin(), leaf_id_list.end(), PDTree::sortLeafList);
+        return leaf_id_list[0];
     }
 
     // 从零开始构建一棵四岔树
@@ -153,17 +180,20 @@ private:
         for(int i = 0; i < n; i += 1) unused.push_back(pd_code.getCrossing(i));
 
         // 先随机选择一个节点，用于生成根节点
+        // 根节点默认 base 方向朝向正东方向，并且坐标放置在原点处
         int root = newTreeNode();
         message[root].pd_crossing = popRandomCrossing(unused);
         message[root].base_direction = Direction::EAST;
+        structure[root].pos2d = Coord2dPosition();
 
         // 如果还有没有放到树上的节点，则运行下面的循环
         while(unused.size() > 0) {
 
-            // 随机选择一个 socket_id 进行拓展
-            LeafInfo leaf_info = getRandomSocket(root);
+            // 选择一个最优 socket_id 进行拓展
+            LeafInfo leaf_info = getBestSocket(root);
 
             // 在 unused 序列中找到第一次出现这个 socket_id 的 crossing
+            // 根据这个 crossing 的信息新建一个节点 
             int new_node = newTreeNode();
             message[new_node].pd_crossing = popCrossingBySocketId(unused, leaf_info.socket_id);
 
@@ -176,9 +206,13 @@ private:
             message[new_node].base_direction = message[new_node].pd_crossing.baseShift(
                 leaf_info.socket_id, oppo_dir);
             
-            // 让父子节点相认：需要连接两条单向边
+            // 让父子节点相认
+            // 连接两条单向边，再放置子节点的正确坐标位置
             structure[new_node].next_node[(int)oppo_dir] = leaf_info.node_id;
             structure[leaf_info.node_id].next_node[(int)leaf_info.dir] = new_node;
+            structure[new_node].pos2d = Coord2dPosition::add(
+                structure[leaf_info.node_id].pos2d, 
+                Coord2dPosition::getDeltaPositionByDirection(leaf_info.dir));
         }
     }
 
@@ -191,6 +225,7 @@ public:
         message.clear();
 
         // 保证零号节点总是存在的
+        // 因为零号节点用于表示空的 socket，而最小节点编号为 1
         int zero = newTreeNode();
         assert(zero == 0);
     }
