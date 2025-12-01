@@ -68,7 +68,23 @@ public:
     int getSocketIdByDirection(Direction base, Direction aim) const {
 
         int delta_dir = ((4 + (int)aim - (int)base) % 4);
-        assert(0 <= delta_dir && delta_dir > 4);
+        assert(0 <= delta_dir && delta_dir < 4);
         return crs[delta_dir];
+    }
+
+    // 首先，要求当前 crossing 必须有编号为 socket_id 的 socket
+    // 其次，这个函数可以计算出
+    // 为了让 socket_id 朝向 aim_dir，需要将 base_dir 设为什么
+    Direction baseShift(int socket_id, Direction aim_dir) const {
+        assert(hasSocket(socket_id));
+
+        int pos = -1;
+        for(int i = 0; i < 4; i += 1) { // 找到 socket_id 第一次出现的位置
+            if(crs[i] == socket_id) {
+                pos = i;
+                break;
+            }
+        }
+        return (Direction)((4 + (int)aim_dir - pos) % 4);
     }
 };

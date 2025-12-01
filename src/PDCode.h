@@ -25,6 +25,12 @@ private:
 
 public:
 
+    // 把对象恢复到初始化之前的状态
+    void clear() {
+        n = 0;
+        pd_code.clear();
+    }
+
     // 一个默认的 pd_code 有零个交叉点
     // 这样的 pd_code 不可以参与各种运算
     PDCode(): n(0), pd_code({}) {
