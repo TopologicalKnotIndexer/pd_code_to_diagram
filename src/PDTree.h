@@ -166,6 +166,7 @@ private:
                         .socket_id = socket_id,
 
                         // 关于权重的解释
+                        // 由于权重越大越好，因此惩罚项应该用负系数
                         // 1. 我们希望优先拓展离原点更远的节点
                         // 2. 对于同一个节点的多个 socket 优先拓展方向与节点位置坐标一致的 socket
                         // 3. 如果新生成的节点位置有人占据，则施加较大的惩罚
@@ -175,8 +176,8 @@ private:
                             Coord2dPosition::dot(
                                 structure[x].pos2d.unit(),
                                 Coord2dPosition::getDeltaPositionByDirection((Direction)i)) * 0.5
-                            + calcPositionPunish(new_pos)
-                            + calcNearPunish(x, new_pos))
+                            - calcPositionPunish(new_pos)
+                            - calcNearPunish(x, new_pos))
                     };
                 }
 

@@ -14,7 +14,7 @@ private:
 
 public:
     // 浮点误差
-    static const Coord2dType EPS = 1e-7;
+    static constexpr Coord2dType EPS = 1e-7;
 
     // 读取变量中的坐标信息
     Coord2dType getX() const {return x;}
