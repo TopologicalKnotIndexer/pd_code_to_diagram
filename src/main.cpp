@@ -7,17 +7,29 @@
 
 #include <iostream>
 
-#include "PDCode.h"
-#include "PDTree.h"
+#include "PathEngine/SpfaPathEngine.h"
+#include "PathEngine/PixelGraphEngine.h"
 
 #ifndef NO_MAIN // 如果 NO_MAIN 标志存在，则不编译 main 函数
 int main() {
-    PDCode pd_code;
-    pd_code.InputPdCode(std::cin);
+    PixelGraphEngine pge;
 
-    PDTree pd_tree;
-    pd_tree.load(pd_code);
-    pd_tree.debugOutput();
+    int n, m;
+    std::cin >> n >> m;
+    for(int i = 0; i < n; i += 1) {
+        for(int j = 0; j < m; j += 1) {
+            int x; std::cin >> x;
+            if(x != 0) pge.setPos(i, j, x);
+        }
+    }
+
+    auto spe = SpfaPathEngine();
+    auto ans = spe.runAlgo(pge, 0, n-1, 0, n-1, 0, 0, n-1, m-1);
+
+    for(auto data: ans) {
+        std::cout << "(" << data.getXf() <<  ", " << data.getYf() << ")" << " -> "
+            << "(" << data.getXt() <<  ", " << data.getYt() << ")" << std::endl;
+    }
     return 0;
 }
 #endif
