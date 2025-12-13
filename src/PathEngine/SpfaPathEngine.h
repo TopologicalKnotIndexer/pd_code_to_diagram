@@ -12,59 +12,7 @@
 #include "../Coord2dPosition.h" // 这里有方向和坐标位移的对应关系
 #include "AbstractGraphEngine.h"
 #include "AbstractPathAlgorithm.h"
-
-class GraphEngineWrap: public AbstractGraphEngine{
-private:
-    int xmin, xmax, ymin, ymax;
-    int xf, yf, xt, yt; // 记录其实位置和终止位置
-    int rawVal;
-    const AbstractGraphEngine& age;
-
-public:
-    inline GraphEngineWrap(const AbstractGraphEngine& _age, 
-        int _xmin, int _xmax, int _ymin, int _ymax, int _rawVal,
-        int _xf, int _yf, int _xt, int _yt
-    ): age(_age) {
-
-        assert(_xmin <= _xmax && _ymin <= _ymax);
-        assert(_rawVal != 0); // 空气不能作为外界的值
-        xmin = _xmin;
-        xmax = _xmax;
-        ymin = _ymin;
-        ymax = _ymax;
-        rawVal = _rawVal;
-
-        // 记录起始位置和终止位置
-        xf = _xf;
-        yf = _yf;
-        xt = _xt;
-        yt = _yt;
-    }
-
-    // 可以获得一个位置的值是多少
-    // 一般来说认为 0 是空气，其他数值是障碍物
-    inline virtual int getPos(int x, int y) const override {
-        if(x == xf && y == yf) { // 起始位置永远视为空气
-            return 0;
-        }else
-        if(x == xt && y == yt) { // 终止位置永远视为空气
-            return 0;
-        }else
-        if(x < xmin || x > xmax || y < ymin || y > ymax) {
-            return rawVal;
-        }
-        return age.getPos(x, y);
-    }
-
-    inline virtual void setPos(int x, int y, int v) override {
-        std::cerr << "can not setPos for GraphEngineWrap" << std::endl;
-        assert(false);
-    }
-
-    inline virtual std::tuple<int, int, int, int> getBorderCoord() const override {
-        return age.getBorderCoord();
-    }
-};
+#include "MarginGraphEngineWrap.h"
 
 class SpfaPathEngine: public AbstractPathAlgorithm {
 private:
@@ -131,7 +79,7 @@ public:
         
         // 构建一个新的 AbstractGraphEngine 用于限制活动范围
         // 同时将起点和终点的位置的值，强制归零
-        auto gew = GraphEngineWrap(age, xmin, xmax, ymin, ymax, -1, xf, yf, xt, yt);
+        auto gew = MarginGraphEngineWrap(age, xmin, xmax, ymin, ymax, -1, xf, yf, xt, yt);
         
         // q 记录所有已经在 dis 中出现但还没有进行拓展的节点
         std::queue<PosType> q;
