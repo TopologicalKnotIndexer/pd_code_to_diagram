@@ -26,7 +26,9 @@ int main() {
     SpfaPathEngine spe;
     auto ans = spe.runAlgo(pge, 0, n-1, 0, m-1, 0, 0, n-1, m-1);
 
-    for(auto data: ans) {
+    std::cout << "minDis: " << std::get<0>(ans) << std::endl;
+
+    for(auto data: std::get<1>(ans)) {
         std::cout << "(" << data.getXf() <<  ", " << data.getYf() << ")" << " -> "
             << "(" << data.getXt() <<  ", " << data.getYt() << ")" << std::endl;
     }

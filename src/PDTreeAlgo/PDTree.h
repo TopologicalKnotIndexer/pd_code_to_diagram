@@ -43,14 +43,14 @@ private:
     std::vector<TreeMsg> message;
 
     // 在树上新创建一个节点
-    int newTreeNode() {
+    inline int newTreeNode() {
         structure.push_back(TreeNode());
         message.push_back(TreeMsg());
         return structure.size() - 1;
     }
 
     // 从一个 vector 中随机删除一个元素，并返回
-    PDCrossing popRandomCrossing(std::vector<PDCrossing>& unused_list) {
+    inline PDCrossing popRandomCrossing(std::vector<PDCrossing>& unused_list) {
         assert(unused_list.size() != 0);
 
         int pos = randomInt(0, unused_list.size() - 1);
@@ -62,7 +62,7 @@ private:
     // 给定一个 socket_id
     // 找到 unused_list 中第一次出现这个 socket_id 的位置
     // 并删除它
-    PDCrossing popCrossingBySocketId(std::vector<PDCrossing>& unused_list, int socket_id) {
+    inline PDCrossing popCrossingBySocketId(std::vector<PDCrossing>& unused_list, int socket_id) {
         assert(unused_list.size() != 0);
 
         int pos = -1;
@@ -96,7 +96,7 @@ private:
     // 观察当前是否已经有节点占据了 new_pos 这个位置
     // 如果有则返回一个较大的惩罚
     // 如果没有则返回 0
-    double calcPositionPunish(Coord2dPosition new_pos) const {
+    inline double calcPositionPunish(Coord2dPosition new_pos) const {
         const auto N = (pd_code.getCrossingNumber() + 1);
 
         // 这里需要跳过零号节点，因为零号节点并不是真正意义上的节点
@@ -114,7 +114,7 @@ private:
     // 如果有则返回一个比较大的惩罚
     // 如果没有则返回 0
     // 由于父亲节点到子节点的距离总是 1，因此需要跳过父亲节点
-    double calcNearPunish(int fa_id, Coord2dPosition new_pos) const {
+    inline double calcNearPunish(int fa_id, Coord2dPosition new_pos) const {
         const auto N = (pd_code.getCrossingNumber() + 1);
 
         // 这里需要跳过零号节点，因为零号节点并不是真正意义上的节点
@@ -136,7 +136,7 @@ private:
     // 遍历整颗树
     // leaf_id_map 将记录一些关于树上空闲插头的信息
     // 具体参考 getBestSocket 函数前的注释
-    void dfs(int x, int fa, std::map<int, LeafInfo>& leaf_id_map) {
+    inline void dfs(int x, int fa, std::map<int, LeafInfo>& leaf_id_map) {
         for(int i = 0; i < 4; i += 1) {
             if(structure[x].next_node[i] == fa) { // 避免对父节点进行递归
                 continue;
@@ -198,7 +198,7 @@ private:
     // 1. 这个 socket 目前必须是空闲的
     // 2. 这个 socket 对应的编号，目前在树上恰出现一次
     // 3. 如果有多个可用的，优先选择 right 最大的 socket
-    LeafInfo getBestSocket(int root) {
+    inline LeafInfo getBestSocket(int root) {
         // leaf_id_map 第一次遇到某个 socket_id 时
         // leaf_id_map[socket_id] 赋值为这个 socket 的 LeafInfo
         // 第二次遇到同样的 socket_id 时，在 leaf_id_map 上删除 leaf_id_map[socket_id]
@@ -220,7 +220,7 @@ private:
     }
 
     // 从零开始构建一棵四岔树
-    void buildTree() {
+    inline void buildTree() {
         // 预先保存所有交叉点数
         const int n = pd_code.getCrossingNumber();
         assert(n != 0);
@@ -269,7 +269,7 @@ private:
 public:
     
     // 把对象恢复到初始化之前的状态
-    void clear() {
+    inline void clear() {
         pd_code.clear();
         structure.clear();
         message.clear();
@@ -281,7 +281,7 @@ public:
     }
 
     // 加载一个 pd_code 并计算生成树
-    void load(PDCode new_pd_code) {
+    inline void load(PDCode new_pd_code) {
         clear(); // 清除历史数据
 
         pd_code = new_pd_code;
@@ -291,7 +291,7 @@ public:
     }
     
     // 输出关于建树的调试信息
-    void debugOutput() {
+    inline void debugOutput() {
         for(int i = 1; i < message.size();  i += 1) {
             std::cout << "node " << i << ": " << std::endl;
 

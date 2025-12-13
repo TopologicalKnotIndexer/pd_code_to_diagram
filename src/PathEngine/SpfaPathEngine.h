@@ -8,8 +8,9 @@
 #include <tuple>
 #include <queue>
 
-#include "../Direction.h"
-#include "../Coord2dPosition.h" // 这里有方向和坐标位移的对应关系
+#include "../PDTreeAlgo/Direction.h"
+#include "../PDTreeAlgo/Coord2dPosition.h" // 这里有方向和坐标位移的对应关系
+
 #include "AbstractGraphEngine.h"
 #include "AbstractPathAlgorithm.h"
 #include "MarginGraphEngineWrap.h"
@@ -63,7 +64,8 @@ private:
 public:
     inline virtual ~SpfaPathEngine(){}
 
-    inline virtual std::vector<LineData>
+    inline virtual 
+    std::tuple<double, std::vector<LineData>>
     runAlgo(const AbstractGraphEngine& age,
         int xmin, int xmax, int ymin, int ymax,    // 限制地图的范围，超出范围的地方全视为障碍物
         int xf, int yf, int xt, int yt) override { // 标记起始位置和终止位置
@@ -74,7 +76,10 @@ public:
 
         // 起始位置和终止位置重合，直接就能走到，返回即可
         if(xf == xt && yf == yt) {
-            return std::vector<LineData>({LineData(xf, xt, yf, yt, 0)});
+            return std::make_tuple(
+                0.0,
+                std::vector<LineData>({LineData(xf, xt, yf, yt, 0)})
+            );
         }
         
         // 构建一个新的 AbstractGraphEngine 用于限制活动范围
@@ -140,6 +145,7 @@ public:
         }
 
         // 得到路径上经过的所有点
+        auto old_pos_now = pos_now; // 在算法执行前备份 pos_now
         std::vector<PosType> arr;
         while(true) {
             arr.push_back(pos_now);
@@ -151,6 +157,7 @@ public:
         }
         std::reverse(arr.begin(), arr.end()); // 反转这个序列
         assert(arr.size() >= 1);
-        return getVecLineData(arr); // 从途径点上的信息合并得到最终的路径
+        return std::make_tuple(
+            dis[old_pos_now], getVecLineData(arr)); // 从途径点上的信息合并得到最终的路径
     }
 };
