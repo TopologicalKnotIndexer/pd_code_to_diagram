@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <set>
 #include <vector>
 
 #include "../Utils/Coord2dPosition.h"
@@ -11,6 +12,7 @@
 
 #include "PDCrossing.h"
 #include "PDCode.h"
+#include "SocketInfo.h"
 
 // 描述上下左右四个方向的节点编号
 // 四个方向与 Direction 类中的方向定义一致
@@ -42,6 +44,9 @@ private:
     // 0 号节点表示空节点，不存储任何信息
     std::vector<TreeNode> structure;
     std::vector<TreeMsg> message;
+
+    // 记录某个 sokcet_id 是否是树边
+    std::map<int, bool> socket_used;
 
     // 在树上新创建一个节点
     inline int newTreeNode() {
@@ -264,6 +269,9 @@ private:
             structure[new_node].pos2d = Coord2dPosition::add(
                 structure[leaf_info.node_id].pos2d, 
                 Coord2dPosition::getDeltaPositionByDirection(leaf_info.dir));
+
+            // 将刚刚链接起来的边记录为已经使用过的
+            socket_used[leaf_info.socket_id] = true;
         }
     }
 
@@ -289,6 +297,50 @@ public:
         assert(pd_code.getCrossingNumber() != 0);
 
         buildTree(); // 构建树
+    }
+
+    // 检查
+    // 1. 要求已经完成了建树
+    // 2. 是否有不同的节点被放置在的相同的坐标点上
+    inline bool checkNoOverlay() const {
+        assert(pd_code.getCrossingNumber() > 0); // 必须完成了建树
+
+        // 记录所有出现过的点坐标
+        std::set<std::tuple<int, int>> coord2d_set;
+        for(int i = 1; i < structure.size(); i += 1) {
+            int xnow = (int)round(structure[i].pos2d.getX());
+            int ynow = (int)round(structure[i].pos2d.getY());
+            coord2d_set.insert(std::make_tuple(xnow, ynow));
+        }
+
+        // 必须有 n 个互不相同的坐标
+        return coord2d_set.size() == pd_code.getCrossingNumber();
+    }
+
+    // 能够通过 SocketInfo 推出其他重要信息
+    inline SocketInfo getSocketInfo() {
+        assert(pd_code.getCrossingNumber() > 0); // 必须完成了建树
+        SocketInfo socket_info;
+
+        // 先保存所有 socket 的使用状态
+        int n = pd_code.getCrossingNumber();
+        for(int i = 1; i <= 2 * n; i += 1) {
+            if(socket_used[i]) socket_info.setUsed(i, true);
+        }
+
+        // 然后保存每个 socket 的坐标与方向
+        for(int i = 1; i < message.size(); i += 1) {
+            for(int d = 0; d < 4; d += 1) {
+                auto socket_id = message[i].pd_crossing.getSocketIdByDirection(
+                    message[i].base_direction, (Direction)d);
+                int xpos = (int)std::round(structure[i].pos2d.getX());
+                int ypos = (int)std::round(structure[i].pos2d.getY());
+
+                // 向结构中插入一个位置信息
+                socket_info.addInfo(socket_id, xpos, ypos, (Direction)d);
+            }
+        }
+        return socket_info;
     }
     
     // 输出关于建树的调试信息

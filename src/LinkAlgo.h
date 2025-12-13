@@ -1,0 +1,138 @@
+#pragma once
+
+#include <algorithm>
+#include <cassert>
+#include <tuple>
+
+#include "PathEngine/VectorGraphEngine.h"
+#include "PathEngine/ErasePointGraphEngineWrap.h"
+#include "PathEngine/MergeGraphEngineWrap.h"
+#include "PathEngine/SpanGraphEngineWrap.h"
+#include "PathEngine/SpfaPathEngine.h"
+
+#include "PDTreeAlgo/SocketInfo.h"
+
+#include "Utils/Coord2dPosition.h"
+
+// 给定一组 socket 信息，计算节点之间的连接关系
+class LinkAlgo {
+private:
+    SocketInfo socket_info;
+    VectorGraphEngine treeEdgeVGE;
+    VectorGraphEngine crossingVGE;
+    const int crossing_cnt;
+
+    // 保持两个节点之间距离
+    inline void parseArrange() {
+        const auto& pr = crossingVGE.parsifyDryRun(6);
+        socket_info.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
+        treeEdgeVGE.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
+        crossingVGE.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
+    }
+
+    inline void saveNearest(const std::vector<int>& unused_sokcet_id_list) {
+
+        // 把所有可以相连的点，计算最短连接距离
+        // 理论上这个时候所有的未使用的 socket 都一定可以相连，因为已经稀疏化过了
+        std::vector<std::tuple<double, int>> distance_id_pair_list;
+        std::map<int, std::vector<LineData>> pathStorage;
+
+        for(auto socket_id: unused_sokcet_id_list) {
+
+            // 构建去掉四个点的图
+            auto epgew = ErasePointGraphEngineWrap(MergeGraphEngineWrap(
+                SpanGraphEngineWrap(crossingVGE),
+                treeEdgeVGE
+            ));
+
+            // 确定起点终点，并将其设置为可行走的
+            auto vec = socket_info.getInfo(socket_id);
+            assert(vec.size() == 2);
+            for(auto pos: vec) { // 设置 epgew 的四个禁用障碍点 (否则会被 SpanGraphEngineWrap 堵死)
+                int xpos, ypos;
+                Direction dir;
+                std::tie(xpos, ypos, dir) = pos;
+
+                int dx = (int)round(Coord2dPosition::getDeltaPositionByDirection(dir).getX());
+                int dy = (int)round(Coord2dPosition::getDeltaPositionByDirection(dir).getY());
+                epgew.addEmptyPos(xpos, ypos);           // 交叉点本身是可以行走的
+                epgew.addEmptyPos(xpos + dx, ypos + dy); // 交叉点旁边的一个点是可以行走的
+            }
+
+            // 获取起点以及终点
+            int x1, y1; Direction d1; std::tie(x1, y1, d1) = vec[0];
+            int x2, y2; Direction d2; std::tie(x2, y2, d2) = vec[1];
+
+            // 获取可以行走的坐标范围（预留外界的合法边界）
+            int xmin, xmax, ymin, ymax;
+            std::tie(xmin, xmax, ymin, ymax) = epgew.getBorderCoord();
+            xmin -= 5;
+            xmax += 5;
+            ymin -= 5;
+            ymax += 5;
+
+            auto pr = SpfaPathEngine().runAlgo(epgew, xmin, xmax, ymin, ymax, x1, y1, x2, y2);
+            assert(std::get<0>(pr) != -1.0);     // 如果这里条件不成立，说明原来的图不是平面图
+            assert(std::get<1>(pr).size() != 0); // 如果这里条件不成立，说明原来的图不是平面图
+
+            distance_id_pair_list.push_back(std::make_tuple(std::get<0>(pr), socket_id));
+            pathStorage[socket_id] = std::get<1>(pr); // 存档当前计算出的最优路径
+        }
+
+        // 最小距离 和 交叉点编号构成的二元组
+        const auto& pr = *std::min_element(distance_id_pair_list.begin(), distance_id_pair_list.end());
+        const auto& socket_id_best = std::get<1>(pr);
+
+        // 把这条路线直接放入地图中并将当前节点标记为已经使用过的
+        for(const LineData& ld: pathStorage[socket_id_best]) {
+            auto line_data_now = ld.setV(socket_id_best); // 编号必须写成当前 socket_id
+            treeEdgeVGE.setLine(line_data_now);
+        }
+        socket_info.setUsed(socket_id_best, true); // 设为已经使用过了
+    }
+
+    // 稠密化
+    inline void compactArrange() {
+        const auto& pr = crossingVGE.parsifyDryRun(1);
+        socket_info.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
+        treeEdgeVGE.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
+        crossingVGE.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
+    }
+
+    // 试图将最近的一组边放置到图上
+    inline void buildOne() {
+        auto unused_sokcet_id_list = socket_info.getAllUnusedId(crossing_cnt);
+        assert(unused_sokcet_id_list.size() > 0); // 至少有一个没有使用过的编号
+
+        parseArrange();                      // 先把图像稀疏化，使得一定有边可以相连
+        saveNearest(unused_sokcet_id_list);  // 把理论最近的一组 sokcet_id 连接起来
+        compactArrange();                    // 再稠密化
+    }
+
+    // 试图最终把所有边都放到图上
+    inline void buildAll() {
+        while(socket_info.getUsedCnt() < 2 * crossing_cnt) {
+            buildOne();
+        }
+        compactArrange(); // 最后进行合理密布
+    }
+
+public:
+    ~LinkAlgo(){}
+    LinkAlgo(int _crossing_cnt, const SocketInfo& _socket_info): 
+        socket_info(_socket_info), crossing_cnt(_crossing_cnt) {
+        socket_info.check(_crossing_cnt);           // 保证数据合法
+        treeEdgeVGE = socket_info.getTreeEdgeVGE(); // 所有的树边
+        crossingVGE = socket_info.getCrossingVGE(); // 所有的交叉点节点
+        
+        buildAll();
+    }
+
+    // 这里的做法就是，直接把交叉点叠加到所有树边构成的图上就行
+    inline MergeGraphEngineWrap getFinalGraph() {
+        return MergeGraphEngineWrap(
+            crossingVGE,
+            treeEdgeVGE
+        );
+    }
+};

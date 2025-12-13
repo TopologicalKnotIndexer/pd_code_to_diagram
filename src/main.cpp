@@ -7,45 +7,31 @@
 
 #include <iostream>
 
-#include "PathEngine/SpfaPathEngine.h"
-#include "PathEngine/PixelGraphEngine.h"
-
-#include "Utils/PrecisionTimer.h"
-#include "Utils/Random.h"
+#include "LinkAlgo.h"
+#include "PDTreeAlgo/PDCode.h"
+#include "PDTreeAlgo/PDTree.h"
+#include "PDTreeAlgo/SocketInfo.h"
 
 #ifndef NO_MAIN // 如果 NO_MAIN 标志存在，则不编译 main 函数
 int main() {
-    PixelGraphEngine pge;
 
-    // 生成墙的概率
-    double PWALL;
-    std::cout << "PWALL: ";
-    std::cin >> PWALL;
+    std::cout << "input pd_code ..." << std::endl;
+    PDCode pd_code;
+    pd_code.InputPdCode(std::cin); // 输入一个 pd_code
 
-    int n, m;
-    std::cout << "n m: ";
-    std::cin >> n >> m;
-    for(int i = 0; i < n; i += 1) {
-        for(int j = 0; j < m; j += 1) {
-            double pnow = randomInt(0, 99999) / 100000.0;
-            if(pnow < PWALL) pge.setPos(i, j, 1.0);
-        }
-    }
+    std::cout << "generating pd_tree ..." << std::endl;
+    PDTree pd_tree;
+    pd_tree.load(pd_code); // 生成树形图
 
-    PrecisionTimer pt;
+    std::cout << "generating and checking socket_info ..." << std::endl;
+    SocketInfo s_info = pd_tree.getSocketInfo(); // 生成完全的插头信息
+    s_info.check(pd_code.getCrossingNumber());   // 检查信息合法性
 
-    pt.start();
-    SpfaPathEngine spe;
-    auto ans = spe.runAlgo(pge, 0, n-1, 0, m-1, 0, 0, n-1, m-1);
-    pt.stop();
+    std::cout << "running link algo ..." << std::endl;
+    LinkAlgo link_algo(pd_code.getCrossingNumber(), s_info);
 
-    std::cout << "get_elapsed_ms: " << pt.get_elapsed_ms() / 1000.0 << "s" << std::endl;
-    std::cout << "minDis: " << std::get<0>(ans) << std::endl;
-
-    // for(auto data: std::get<1>(ans)) {
-    //     std::cout << "(" << data.getXf() <<  ", " << data.getYf() << ")" << " -> "
-    //         << "(" << data.getXt() <<  ", " << data.getYt() << ")" << std::endl;
-    // }
+    std::cout << "output ans ..." << std::endl;
+    link_algo.getFinalGraph().debugOutput();
     return 0;
 }
 #endif

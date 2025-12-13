@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+#include <iostream>
 #include <vector>
 
 #include "AbstractGraphEngine.h"
@@ -19,9 +21,13 @@ public:
         return pge.getPos(x, y);
     }
 
-    void setLine(const LineData& lineData) {
+    virtual void setLine(const LineData& lineData) override {
         lineDataSet.push_back(lineData);
         pge.setLine(lineData);
+    }
+
+    virtual void setPos(int x, int y, int v) override {
+        setLine(LineData(x, x, y, y, v));
     }
 
     virtual std::tuple<int, int, int, int> getBorderCoord() const override {
@@ -63,8 +69,8 @@ public:
             // 记录所有坐标是如何变化的
             mapFuncX[xf] = intSetX.rank(xf) * k;
             mapFuncX[xt] = intSetX.rank(xt) * k;
-            mapFuncY[yf] = intSetX.rank(yf) * k;
-            mapFuncY[yt] = intSetX.rank(yt) * k;
+            mapFuncY[yf] = intSetY.rank(yf) * k;
+            mapFuncY[yt] = intSetY.rank(yt) * k;
         }
 
         // 描述坐标映射
