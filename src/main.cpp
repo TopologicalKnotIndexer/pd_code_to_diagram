@@ -24,7 +24,7 @@ int main() {
     }
 
     auto spe = SpfaPathEngine();
-    auto ans = spe.runAlgo(pge, 0, n-1, 0, n-1, 0, 0, n-1, m-1);
+    auto ans = spe.runAlgo(pge, 0, n-1, 0, m-1, 0, 0, n-1, m-1);
 
     for(auto data: ans) {
         std::cout << "(" << data.getXf() <<  ", " << data.getYf() << ")" << " -> "
