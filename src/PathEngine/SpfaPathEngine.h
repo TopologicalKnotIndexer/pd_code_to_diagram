@@ -21,7 +21,7 @@ private:
     const AbstractGraphEngine& age;
 
 public:
-    GraphEngineWrap(const AbstractGraphEngine& _age, 
+    inline GraphEngineWrap(const AbstractGraphEngine& _age, 
         int _xmin, int _xmax, int _ymin, int _ymax, int _rawVal,
         int _xf, int _yf, int _xt, int _yt
     ): age(_age) {
@@ -43,7 +43,7 @@ public:
 
     // 可以获得一个位置的值是多少
     // 一般来说认为 0 是空气，其他数值是障碍物
-    virtual int getPos(int x, int y) const override {
+    inline virtual int getPos(int x, int y) const override {
         if(x == xf && y == yf) { // 起始位置永远视为空气
             return 0;
         }else
@@ -55,6 +55,15 @@ public:
         }
         return age.getPos(x, y);
     }
+
+    inline virtual void setPos(int x, int y, int v) override {
+        std::cerr << "can not setPos for GraphEngineWrap" << std::endl;
+        assert(false);
+    }
+
+    inline virtual std::tuple<int, int, int, int> getBorderCoord() const override {
+        return age.getBorderCoord();
+    }
 };
 
 class SpfaPathEngine: public AbstractPathAlgorithm {
@@ -65,7 +74,7 @@ private:
     std::set<PosType> vis;          // 描述一个元素在不在队列里
 
     using NxtInfo = std::tuple<int, int, Direction, double>;
-    std::vector<NxtInfo> getNextPos(PosType pos_at) const {
+    inline std::vector<NxtInfo> getNextPos(PosType pos_at) const {
         std::vector<NxtInfo> ans;
 
         auto xnow = std::get<0>(pos_at);
@@ -90,7 +99,7 @@ private:
     }
 
     // 根据路径上经过的点信息合并出折线段
-    std::vector<LineData> getVecLineData(std::vector<PosType> path) const {
+    inline std::vector<LineData> getVecLineData(std::vector<PosType> path) const {
         std::vector<LineData> ans;
         for(int i = 0; i < path.size(); i += 1) {
             auto xnow = std::get<0>(path[i]);
@@ -104,10 +113,12 @@ private:
         return ans;
     }
 public:
-    std::vector<LineData>
+    inline virtual ~SpfaPathEngine(){}
+
+    inline virtual std::vector<LineData>
     runAlgo(const AbstractGraphEngine& age,
-        int xmin, int xmax, int ymin, int ymax, // 限制地图的范围，超出范围的地方全视为障碍物
-        int xf, int yf, int xt, int yt) {       // 标记起始位置和终止位置
+        int xmin, int xmax, int ymin, int ymax,    // 限制地图的范围，超出范围的地方全视为障碍物
+        int xf, int yf, int xt, int yt) override { // 标记起始位置和终止位置
 
         // 清空距离数据结构
         dis.clear();

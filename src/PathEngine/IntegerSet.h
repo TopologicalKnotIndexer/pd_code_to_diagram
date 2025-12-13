@@ -15,7 +15,7 @@ private:
 public:
 
     // 向集合中插入元素
-    void addInt(int v) {
+    inline void addInt(int v) {
         if(valSet.count(v) == 0) {
             valSet.insert(v);
             valVec.push_back(v);
@@ -26,7 +26,7 @@ public:
 
     // 给定一个元素计算这个元素当前的排名
     // 排名从 0 开始，并且大于等于 0, 不同的数的排名一定不同
-    int rank(int v) {
+    inline int rank(int v) {
         assert(valSet.count(v) >= 1); // 这个元素必须存在
         if(!sorted) {
             sort(valVec.begin(), valVec.end());

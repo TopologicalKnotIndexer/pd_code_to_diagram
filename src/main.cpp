@@ -23,7 +23,7 @@ int main() {
         }
     }
 
-    auto spe = SpfaPathEngine();
+    SpfaPathEngine spe;
     auto ans = spe.runAlgo(pge, 0, n-1, 0, m-1, 0, 0, n-1, m-1);
 
     for(auto data: ans) {

@@ -13,6 +13,8 @@ private:
     PixelGraphEngine pge;
 
 public:
+    virtual ~VectorGraphEngine(){}
+
     virtual int getPos(int x, int y) const override {
         return pge.getPos(x, y);
     }
@@ -20,6 +22,10 @@ public:
     void setLine(const LineData& lineData) {
         lineDataSet.push_back(lineData);
         pge.setLine(lineData);
+    }
+
+    virtual std::tuple<int, int, int, int> getBorderCoord() const override {
+        return pge.getBorderCoord();
     }
 
     // 对坐标集合进行稀疏化
