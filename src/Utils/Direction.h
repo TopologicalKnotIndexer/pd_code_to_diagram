@@ -8,3 +8,12 @@ enum class Direction {
     WEST = 2,
     SOUTH = 3
 };
+
+// 为 Direction 类型提供哈希函数
+namespace std {
+    template<> struct hash<Direction> {
+        size_t operator()(const Direction& d) const {
+            return hash<int>()(static_cast<int>(d));
+        }
+    };
+}

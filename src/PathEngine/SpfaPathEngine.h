@@ -4,10 +4,10 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
-#include <map>
-#include <set>
-#include <tuple>
 #include <queue>
+#include <tuple>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "../Utils/Direction.h"
 #include "../Utils/Coord2dPosition.h" // 这里有方向和坐标位移的对应关系
@@ -16,20 +16,35 @@
 #include "AbstractPathAlgorithm.h"
 #include "MarginGraphEngineWrap.h"
 
+// 为元组类型提供哈希函数，以方便使用 unordered_map 和 unordered_set
+namespace std {
+    template<> struct hash<std::tuple<int, int, Direction>> {
+        size_t operator()(const std::tuple<int, int, Direction>& t) const {
+            auto h1 = hash<int>()(std::get<0>(t));
+            auto h2 = hash<int>()(std::get<1>(t));
+            auto h3 = hash<Direction>()(std::get<2>(t));
+            
+            return h1 ^ (h2 << 1) ^ (h3 << 2);
+        }
+    };
+}
+
+// 假设最大可以移动的坐标范围是 (0, 0) -> (N-1, M-1) 这个矩形框
+// 目前分析出大概的系统用时是 (NM / 10000) 秒
 class SpfaPathEngine: public AbstractPathAlgorithm {
 private:
     using PosType = std::tuple<int, int, Direction>; 
-    std::map<PosType,  double> dis; // 描述初始位置出发后走了多少距离
-    std::map<PosType, PosType> pre; // 描述最优前驱
-    std::set<PosType> vis;          // 描述一个元素在不在队列里
+    std::unordered_map<PosType,  double> dis; // 描述初始位置出发后走了多少距离
+    std::unordered_map<PosType, PosType> pre; // 描述最优前驱
+    std::unordered_set<PosType> vis;          // 描述一个元素在不在队列里
 
     using NxtInfo = std::tuple<int, int, Direction, double>;
     inline std::vector<NxtInfo> getNextPos(PosType pos_at) const {
         std::vector<NxtInfo> ans;
 
-        auto xnow = std::get<0>(pos_at);
-        auto ynow = std::get<1>(pos_at);
-        auto dnow = std::get<2>(pos_at);
+        int xnow, ynow;
+        Direction dnow;
+        std::tie(xnow, ynow, dnow) = pos_at;
 
         auto coord2d = Coord2dPosition::getDeltaPositionByDirection(dnow);
         auto dx = (int)std::round(coord2d.getX()); // coord2d.getX() 得到的是 double 类型
@@ -78,7 +93,7 @@ public:
         // 起始位置和终止位置重合，直接就能走到，返回即可
         if(xf == xt && yf == yt) {
             return std::make_tuple(
-                0.0,
+                -1.0,
                 std::vector<LineData>({LineData(xf, xt, yf, yt, 0)})
             );
         }
@@ -109,10 +124,11 @@ public:
             // x_y_d_v 是一个四元组，分别表示：x, y, 新的朝向, 与当前节点的距离
             for(auto x_y_d_v: getNextPos(pos_at))
             {
-                auto xnxt = std::get<0>(x_y_d_v);
-                auto ynxt = std::get<1>(x_y_d_v);
-                auto dnxt = std::get<2>(x_y_d_v);
-                auto vnxt = std::get<3>(x_y_d_v); // 表示与当前状态之间的惩罚
+                int xnxt, ynxt;
+                Direction dnxt;
+                double vnxt; // 表示与当前状态之间的惩罚
+                std::tie(xnxt, ynxt, dnxt, vnxt) = x_y_d_v;
+
                 if(gew.getPos(xnxt, ynxt) != 0) { // 被障碍物阻拦了
                     continue;
                 }
@@ -142,7 +158,7 @@ public:
         }
 
         if(std::isinf(dis_now)) { // 说明没有可行解
-            return {};            // 没有可行解应该返回空 list
+            return std::make_tuple(-1.0, std::vector<LineData>({})); // 没有可行解应该返回空 list
         }
 
         // 得到路径上经过的所有点
