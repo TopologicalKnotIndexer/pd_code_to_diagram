@@ -50,7 +50,7 @@ public:
 
     // 不允许设置一个位置的值
     virtual void setPos(int x, int y, int v) override {
-        std::cerr << "can not setPos for SpanGraphEngineWrap" << std::endl;
+        std::cerr << "error: can not setPos for SpanGraphEngineWrap" << std::endl;
         assert(false);
     }
 };

@@ -51,7 +51,7 @@ public:
     }
 
     inline virtual void setPos(int x, int y, int v) override {
-        std::cerr << "can not setPos for GraphEngineWrap" << std::endl;
+        std::cerr << "error: can not setPos for GraphEngineWrap" << std::endl;
         assert(false);
     }
 
