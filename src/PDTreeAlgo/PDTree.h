@@ -5,11 +5,12 @@
 #include <iostream>
 #include <vector>
 
-#include "Coord2dPosition.h"
-#include "Direction.h"
+#include "../Utils/Coord2dPosition.h"
+#include "../Utils/Direction.h"
+#include "../Utils/Random.h"
+
 #include "PDCrossing.h"
 #include "PDCode.h"
-#include "Random.h"
 
 // 描述上下左右四个方向的节点编号
 // 四个方向与 Direction 类中的方向定义一致

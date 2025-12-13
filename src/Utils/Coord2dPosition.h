@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cassert>
+
 #include "Direction.h"
 
 // 描述坐标所使用的数据类型

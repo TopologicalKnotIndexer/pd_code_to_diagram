@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <limits>
 #include <map>
@@ -8,8 +9,8 @@
 #include <tuple>
 #include <queue>
 
-#include "../PDTreeAlgo/Direction.h"
-#include "../PDTreeAlgo/Coord2dPosition.h" // 这里有方向和坐标位移的对应关系
+#include "../Utils/Direction.h"
+#include "../Utils/Coord2dPosition.h" // 这里有方向和坐标位移的对应关系
 
 #include "AbstractGraphEngine.h"
 #include "AbstractPathAlgorithm.h"
@@ -31,8 +32,8 @@ private:
         auto dnow = std::get<2>(pos_at);
 
         auto coord2d = Coord2dPosition::getDeltaPositionByDirection(dnow);
-        auto dx = coord2d.getX();
-        auto dy = coord2d.getY();
+        auto dx = (int)std::round(coord2d.getX()); // coord2d.getX() 得到的是 double 类型
+        auto dy = (int)std::round(coord2d.getY());
 
         // 前进一个单位距离
         // 前进一格需要花费 1.0 的代价
