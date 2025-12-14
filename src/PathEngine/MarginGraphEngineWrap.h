@@ -15,7 +15,8 @@ private:
     const AbstractGraphEngine& age;
 
 public:
-    inline MarginGraphEngineWrap(const AbstractGraphEngine& _age, 
+    virtual ~MarginGraphEngineWrap(){}
+    MarginGraphEngineWrap(const AbstractGraphEngine& _age, 
         int _xmin, int _xmax, int _ymin, int _ymax, int _rawVal,
         int _xf, int _yf, int _xt, int _yt
     ): age(_age) {
@@ -37,7 +38,7 @@ public:
 
     // 可以获得一个位置的值是多少
     // 一般来说认为 0 是空气，其他数值是障碍物
-    inline virtual int getPos(int x, int y) const override {
+    virtual int getPos(int x, int y) const override {
         if(x == xf && y == yf) { // 起始位置永远视为空气
             return 0;
         }else
@@ -50,12 +51,12 @@ public:
         return age.getPos(x, y);
     }
 
-    inline virtual void setPos(int x, int y, int v) override {
+    virtual void setPos(int x, int y, int v) override {
         std::cerr << "error: can not setPos for GraphEngineWrap" << std::endl;
         assert(false);
     }
 
-    inline virtual std::tuple<int, int, int, int> getBorderCoord() const override {
+    virtual std::tuple<int, int, int, int> getBorderCoord() const override {
         return age.getBorderCoord();
     }
 };

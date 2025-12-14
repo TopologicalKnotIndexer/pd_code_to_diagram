@@ -9,25 +9,33 @@
 
 class SocketInfo {
 private:
-    std::map<int, bool> socket_used;
-    int socket_used_cnt = 0;
+    std::map<int, int> socket_used;
 
     // 这里的前两个 int 表示中心点坐标，后面一个 Direction 表示 socket 的方向
     // 理论上 vector 中恰好有两个元素
     std::map<int, std::vector<std::tuple<int, int, Direction>>> socket_info;
 
     // 判断是否已经完成了信息完整性检查
-    bool checked;
+    int checked;
 
 public:
     ~SocketInfo(){}
+    SocketInfo() { // 无参构造函数
+        checked  = false;
+    }
 
-    inline int getUsedCnt() const { // 统计有多少个边被使用过
+    int getUsedCnt() const { // 统计有多少个边被使用过
+        int socket_used_cnt = 0;
+        for(auto pr: socket_used) {
+            if(pr.second) {
+                socket_used_cnt += 1;
+            }
+        }
         return socket_used_cnt;
     }
 
     // 获取得到所有的未被使用的 socket_id
-    inline std::vector<int> getAllUnusedId(int crossing_cnt) const {
+    std::vector<int> getAllUnusedId(int crossing_cnt) const {
         std::vector<int> ans;
         for(int i = 1; i <= 2 * crossing_cnt; i += 1) {
             if(!getUsed(i)) {
@@ -37,26 +45,18 @@ public:
         return ans;
     }
     
-    inline void setUsed(int socket_id, bool new_val) {
-        bool old_value = socket_used[socket_id];
+    void setUsed(int socket_id, bool new_val) {
         socket_used[socket_id] = new_val;
-
-        // 统计总次数的变化
-        if(old_value == false && new_val == true) {
-            socket_used_cnt += 1;
-        }else if(old_value == true && new_val == false) {
-            socket_used_cnt -= 1;
-        }
     }
 
     // 新增一个信息
-    inline void addInfo(int socket_id, int x, int y, Direction d) {
+    void addInfo(int socket_id, int x, int y, Direction d) {
         assert(checked == false); // 完成检查之后不再允许新增信息
         socket_info[socket_id].push_back(std::make_tuple(x, y, d));
     }
 
     // 获取一个 socket 是否使用
-    inline bool getUsed(int socket_id) const {
+    bool getUsed(int socket_id) const {
         if(socket_used.find(socket_id) == socket_used.end()) {
             return false;
         }else {
@@ -65,13 +65,13 @@ public:
     }
 
     // 获取一个 socket 的位置和方向信息
-    inline std::vector<std::tuple<int, int, Direction>> getInfo(int socket_id) {
+    std::vector<std::tuple<int, int, Direction>> getInfo(int socket_id) {
         assert(socket_info[socket_id].size() == 2);
         return socket_info[socket_id];
     }
 
     // 检查数据合法性
-    inline void check(int n) { // 这里的 n 是 crossing number
+    void check(int n) { // 这里的 n 是 crossing number
         if(checked) return;
 
         int used_cnt = 0;
@@ -95,6 +95,7 @@ public:
         
         SocketInfo new_socket_info;
         new_socket_info.socket_used = socket_used; // 直接拷贝 “使用否” 矩阵
+        new_socket_info.checked = false;
         
         for(const auto& vec: socket_info) {
             auto socket_id = vec.first;
@@ -117,7 +118,9 @@ public:
         }
 
         // 使用默认拷贝构造，一次性成型
+        new_socket_info.checked = true;
         *this = new_socket_info;
+        assert(checked == true);
     }
 
     // 获取得到所有树边对应的 VGE

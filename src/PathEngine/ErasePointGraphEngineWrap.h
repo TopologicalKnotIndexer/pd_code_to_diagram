@@ -12,7 +12,7 @@ private:
     std::set<std::tuple<int, int>> force_empty_pos;
 
 public:
-    inline virtual ~ErasePointGraphEngineWrap(){}
+    virtual ~ErasePointGraphEngineWrap(){}
     ErasePointGraphEngineWrap(const AbstractGraphEngine& _raw_age): raw_age(_raw_age) {}
 
     void clear() {

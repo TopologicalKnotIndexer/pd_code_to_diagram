@@ -11,9 +11,9 @@ private:
     const AbstractGraphEngine& age_next;
 
 public:
-    inline virtual ~MergeGraphEngineWrap(){}
+    virtual ~MergeGraphEngineWrap(){}
 
-    inline MergeGraphEngineWrap(
+    MergeGraphEngineWrap(
         const AbstractGraphEngine& _age_front, const AbstractGraphEngine& _age_next):
         age_front(_age_front), age_next(_age_next) {}
     

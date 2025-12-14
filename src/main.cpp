@@ -15,13 +15,25 @@
 #ifndef NO_MAIN // 如果 NO_MAIN 标志存在，则不编译 main 函数
 int main() {
 
+    // 设置随机种子
+    unsigned int seed = 42;
+    random::setSeed(seed);
+
     std::cout << "input pd_code ..." << std::endl;
     PDCode pd_code;
     pd_code.InputPdCode(std::cin); // 输入一个 pd_code
 
     std::cout << "generating pd_tree ..." << std::endl;
     PDTree pd_tree;
-    pd_tree.load(pd_code); // 生成树形图
+
+    // 生成树形图直到没有交叉点重叠
+    while(true) {
+        pd_tree.clear();
+        pd_tree.load(pd_code); // 生成树形图
+        if(pd_tree.checkNoOverlay()) {
+            break;
+        }
+    }
 
     std::cout << "generating and checking socket_info ..." << std::endl;
     SocketInfo s_info = pd_tree.getSocketInfo(); // 生成完全的插头信息

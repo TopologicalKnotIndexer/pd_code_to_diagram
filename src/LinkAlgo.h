@@ -22,15 +22,19 @@ private:
     VectorGraphEngine crossingVGE;
     const int crossing_cnt;
 
-    // 保持两个节点之间距离
-    inline void parseArrange() {
-        const auto& pr = crossingVGE.parsifyDryRun(6);
+    void rawParsify(int k) {
+        const auto& pr = treeEdgeVGE.parsifyDryRun(k);
         socket_info.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
         treeEdgeVGE.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
         crossingVGE.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
     }
 
-    inline void saveNearest(const std::vector<int>& unused_sokcet_id_list) {
+    // 保持两个节点之间距离
+    void parseArrange() {
+        rawParsify(6);
+    }
+
+    void saveNearest(const std::vector<int>& unused_sokcet_id_list) {
 
         // 把所有可以相连的点，计算最短连接距离
         // 理论上这个时候所有的未使用的 socket 都一定可以相连，因为已经稀疏化过了
@@ -40,10 +44,12 @@ private:
         for(auto socket_id: unused_sokcet_id_list) {
 
             // 构建去掉四个点的图
-            auto epgew = ErasePointGraphEngineWrap(MergeGraphEngineWrap(
-                SpanGraphEngineWrap(crossingVGE),
+            SpanGraphEngineWrap sgew(crossingVGE);
+            MergeGraphEngineWrap megw(
+                sgew,
                 treeEdgeVGE
-            ));
+            );
+            ErasePointGraphEngineWrap epgew(megw);
 
             // 确定起点终点，并将其设置为可行走的
             auto vec = socket_info.getInfo(socket_id);
@@ -65,7 +71,7 @@ private:
 
             // 获取可以行走的坐标范围（预留外界的合法边界）
             int xmin, xmax, ymin, ymax;
-            std::tie(xmin, xmax, ymin, ymax) = epgew.getBorderCoord();
+            std::tie(xmin, xmax, ymin, ymax) = epgew.getBorderCoord(); // 这里曾经遇到过调用纯虚函数的报错
             xmin -= 5;
             xmax += 5;
             ymin -= 5;
@@ -92,15 +98,12 @@ private:
     }
 
     // 稠密化
-    inline void compactArrange() {
-        const auto& pr = crossingVGE.parsifyDryRun(1);
-        socket_info.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
-        treeEdgeVGE.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
-        crossingVGE.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
+    void compactArrange() {
+        rawParsify(2);
     }
 
     // 试图将最近的一组边放置到图上
-    inline void buildOne() {
+    void buildOne() {
         auto unused_sokcet_id_list = socket_info.getAllUnusedId(crossing_cnt);
         assert(unused_sokcet_id_list.size() > 0); // 至少有一个没有使用过的编号
 
@@ -110,11 +113,11 @@ private:
     }
 
     // 试图最终把所有边都放到图上
-    inline void buildAll() {
+    void buildAll() {
         while(socket_info.getUsedCnt() < 2 * crossing_cnt) {
+            std::cout << "buildAdd: socket_info.getUsedCnt() = " << socket_info.getUsedCnt() << std::endl;
             buildOne();
         }
-        compactArrange(); // 最后进行合理密布
     }
 
 public:
@@ -124,12 +127,11 @@ public:
         socket_info.check(_crossing_cnt);           // 保证数据合法
         treeEdgeVGE = socket_info.getTreeEdgeVGE(); // 所有的树边
         crossingVGE = socket_info.getCrossingVGE(); // 所有的交叉点节点
-        
         buildAll();
     }
 
     // 这里的做法就是，直接把交叉点叠加到所有树边构成的图上就行
-    inline MergeGraphEngineWrap getFinalGraph() {
+    MergeGraphEngineWrap getFinalGraph() {
         return MergeGraphEngineWrap(
             crossingVGE,
             treeEdgeVGE

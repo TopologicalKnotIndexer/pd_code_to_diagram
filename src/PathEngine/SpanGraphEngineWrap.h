@@ -10,7 +10,7 @@ private:
     const AbstractGraphEngine& raw_age;
 
 public:
-    inline virtual ~SpanGraphEngineWrap(){}
+    virtual ~SpanGraphEngineWrap(){}
     SpanGraphEngineWrap(const AbstractGraphEngine& _raw_age): raw_age(_raw_age) {}
 
     virtual int getPos(int x, int y) const override {

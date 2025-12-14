@@ -13,11 +13,11 @@ private:
     std::map<std::tuple<int, int>, int> pixelValue;
 
 public:
-    inline virtual ~PixelGraphEngine(){}
+    virtual ~PixelGraphEngine(){}
 
     static constexpr int INT_INF = 0x7fffffff;
 
-    inline virtual int getPos(int x, int y) const override {
+    virtual int getPos(int x, int y) const override {
         auto posNow = std::make_tuple(x, y);
         if(pixelValue.find(posNow) != pixelValue.end()) {
             return pixelValue.find(posNow) -> second;
@@ -28,7 +28,8 @@ public:
     // 计算 xmin, xmax, ymin, ymax
     // 当前这个函数的计算是暴力计算的，所以会比较慢，尽量少用
     // 所有统计都只统计非零元素的坐标，零元素的坐标不考虑
-    inline virtual std::tuple<int, int, int, int> getBorderCoord() const override {
+    virtual std::tuple<int, int, int, int> getBorderCoord() const override {
+
         int xmin = +INT_INF;
         int xmax = -INT_INF;
         int ymin = +INT_INF;

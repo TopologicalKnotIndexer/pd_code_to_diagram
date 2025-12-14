@@ -39,7 +39,7 @@ private:
     std::unordered_set<PosType> vis;          // 描述一个元素在不在队列里
 
     using NxtInfo = std::tuple<int, int, Direction, double>;
-    inline std::vector<NxtInfo> getNextPos(PosType pos_at) const {
+    std::vector<NxtInfo> getNextPos(PosType pos_at) const {
         std::vector<NxtInfo> ans;
 
         int xnow, ynow;
@@ -64,7 +64,7 @@ private:
     }
 
     // 根据路径上经过的点信息合并出折线段
-    inline std::vector<LineData> getVecLineData(std::vector<PosType> path) const {
+    std::vector<LineData> getVecLineData(std::vector<PosType> path) const {
         std::vector<LineData> ans;
         for(int i = 0; i < path.size(); i += 1) {
             auto xnow = std::get<0>(path[i]);
@@ -78,9 +78,9 @@ private:
         return ans;
     }
 public:
-    inline virtual ~SpfaPathEngine(){}
+    virtual ~SpfaPathEngine(){}
 
-    inline virtual 
+    virtual 
     std::tuple<double, std::vector<LineData>>
     runAlgo(const AbstractGraphEngine& age,
         int xmin, int xmax, int ymin, int ymax,    // 限制地图的范围，超出范围的地方全视为障碍物

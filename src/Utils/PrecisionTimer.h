@@ -59,7 +59,7 @@ public:
     }
 
 private:
-    bool is_running_;    // 计时状态
+    int is_running_;    // 计时状态
     TimePoint start_time_; // 启动时间点
     double elapsed_ms_;   // 累计耗时（毫秒）
 };

@@ -14,7 +14,7 @@ public:
     virtual int getPos(int x, int y) const = 0;
 
     // 计算 xmin, xmax, ymin, ymax
-    virtual  std::tuple<int, int, int, int> getBorderCoord() const = 0;
+    virtual std::tuple<int, int, int, int> getBorderCoord() const = 0;
 
     // 设置一个位置的值
     virtual  void setPos(int x, int y, int v) = 0;
@@ -46,7 +46,11 @@ public:
 
         for(int i = xmin; i <= xmax; i += 1) {
             for(int j = ymin; j <= ymax; j += 1) {
-                std::cout << std::setw(4) << std::setfill(' ') << getPos(i, j) << " ";
+                if(getPos(i, j) != 0) {
+                    std::cout << std::setw(3) << std::setfill(' ') << getPos(i, j) << " ";
+                }else {
+                    std::cout << "    ";
+                }
             }
             std::cout << std::endl;
         }
