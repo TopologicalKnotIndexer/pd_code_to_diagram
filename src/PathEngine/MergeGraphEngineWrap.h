@@ -47,6 +47,28 @@ public:
             std::max(ymax_front, ymax_next));
     }
 
+    virtual std::vector<std::tuple<int, int>> getAllNegPos() const override {
+        auto pos_list1 = age_front.getAllNegPos();
+        auto pos_list2 = age_next.getAllNegPos();
+
+        std::set<std::tuple<int, int>> new_pos_set;
+        for(auto item: pos_list1) {
+            if(getPos(std::get<0>(item), std::get<1>(item)) < 0) {
+                new_pos_set.insert(item);
+            }
+        }
+        for(auto item: pos_list2) {
+            if(getPos(std::get<0>(item), std::get<1>(item)) < 0) {
+                new_pos_set.insert(item);
+            }
+        }
+        std::vector<std::tuple<int, int>> new_pos_list;
+        for(auto item: new_pos_set) {
+            new_pos_list.push_back(item);
+        }
+        return new_pos_list;
+    }
+
     // 设置一个位置的值
     virtual void setPos(int x, int y, int v) override {
         std::cerr << "error: can not setPos for MergeGraphEngineWrap" << std::endl;

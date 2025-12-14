@@ -2,6 +2,7 @@
 
 #include <iomanip>
 #include <tuple>
+#include <vector>
 #include "LineData.h"
 
 // 抽象地图引擎
@@ -17,7 +18,10 @@ public:
     virtual std::tuple<int, int, int, int> getBorderCoord() const = 0;
 
     // 设置一个位置的值
-    virtual  void setPos(int x, int y, int v) = 0;
+    virtual void setPos(int x, int y, int v) = 0;
+
+    // 获取所有小于零的位置的坐标
+    virtual std::vector<std::tuple<int, int>> getAllNegPos() const = 0;
     
     // 设置一条线段上所有元素的值，但是这条线段必须和轴平行
     // 否则这段代码会报错

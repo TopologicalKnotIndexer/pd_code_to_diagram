@@ -63,4 +63,13 @@ public:
         }
     }
 
+    virtual std::vector<std::tuple<int, int>> getAllNegPos() const override {
+        std::vector<std::tuple<int, int>> pos_list;
+        for(auto pr: pixelValue) {
+            if(pr.second < 0) {
+                pos_list.push_back(pr.first);
+            }
+        }
+        return pos_list;
+    }
 };

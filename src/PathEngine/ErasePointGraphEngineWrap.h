@@ -22,6 +22,18 @@ public:
         force_empty_pos.insert(std::make_tuple(x, y)); // 强制要求某个点是空的
     }
 
+    // 获取所有小于零的位置的坐标
+    virtual std::vector<std::tuple<int, int>> getAllNegPos() const override {
+        auto pos_list = raw_age.getAllNegPos();
+        std::vector<std::tuple<int, int>> new_pos_list; // 删除一些点
+        for(auto item: pos_list) {
+            if(force_empty_pos.count(item) == 0) {
+                new_pos_list.push_back(item);
+            }
+        }
+        return new_pos_list;
+    }
+
     virtual int getPos(int x, int y) const override {
         if(force_empty_pos.size() != 4) {
             std::cerr << "warning: in ErasePointGraphEngineWrap, force_empty_pos.size() != 4" << std::endl;

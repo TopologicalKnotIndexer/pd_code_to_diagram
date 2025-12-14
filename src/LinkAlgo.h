@@ -7,11 +7,9 @@
 #include "PathEngine/VectorGraphEngine.h"
 #include "PathEngine/ErasePointGraphEngineWrap.h"
 #include "PathEngine/MergeGraphEngineWrap.h"
+#include "PDTreeAlgo/SocketInfo.h"
 #include "PathEngine/SpanGraphEngineWrap.h"
 #include "PathEngine/SpfaPathEngine.h"
-
-#include "PDTreeAlgo/SocketInfo.h"
-
 #include "Utils/Coord2dPosition.h"
 
 // 给定一组 socket 信息，计算节点之间的连接关系
@@ -119,10 +117,17 @@ public:
     }
 
     // 这里的做法就是，直接把交叉点叠加到所有树边构成的图上就行
+    // 这里获得的图，在交叉点位置是负数，其他点位置是正数
     MergeGraphEngineWrap getFinalGraph() {
         return MergeGraphEngineWrap(
             crossingVGE,
             treeEdgeVGE
         );
+    }
+
+    // 拷贝当前所有树边的信息
+    // 其中只包含所有的边
+    std::vector<LineData> getAllEdges() const {
+        return treeEdgeVGE.getAllEdges();
     }
 };

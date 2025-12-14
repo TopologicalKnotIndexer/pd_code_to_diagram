@@ -36,6 +36,20 @@ public:
         yt = _yt;
     }
 
+    virtual std::vector<std::tuple<int, int>> getAllNegPos() const override {
+        assert(rawVal >= 0); // 如果 rawVal < 0 则有无穷个负数值，不能这么做
+        auto pos_list = age.getAllNegPos();
+        std::vector<std::tuple<int, int>> new_pos_list;
+        for(auto item: pos_list) {
+            int x, y;
+            std::tie(x, y) = item;
+            if(xmin <= x && x <= xmax && ymin <= y && y <= ymax) {
+                new_pos_list.push_back(item);
+            }
+        }
+        return new_pos_list;
+    }
+
     // 可以获得一个位置的值是多少
     // 一般来说认为 0 是空气，其他数值是障碍物
     virtual int getPos(int x, int y) const override {

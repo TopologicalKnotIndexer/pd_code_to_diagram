@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "LinkAlgo.h"
+#include "NodeSet3D/GenNodeSetAlgo.h"
 #include "PDTreeAlgo/PDCode.h"
 #include "PDTreeAlgo/PDTree.h"
 #include "PDTreeAlgo/SocketInfo.h"
@@ -43,7 +44,8 @@ int main() {
     LinkAlgo link_algo(pd_code.getCrossingNumber(), s_info);
 
     std::cout << "output ans ..." << std::endl;
-    link_algo.getFinalGraph().debugOutput();
+    GenNodeSetAlgo gen_node_set_algo(link_algo.getFinalGraph(), link_algo.getAllEdges());
+    gen_node_set_algo.outputGraph(std::cout);
     return 0;
 }
 #endif

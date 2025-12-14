@@ -113,4 +113,13 @@ public:
         lineDataSet = new_lineDataSet;
         pge = new_pge;
     }
+
+    // 获得当前所有树边信息
+    std::vector<LineData> getAllEdges() const {
+        return lineDataSet;
+    }
+
+    virtual std::vector<std::tuple<int, int>> getAllNegPos() const override {
+        return pge.getAllNegPos();
+    }
 };
