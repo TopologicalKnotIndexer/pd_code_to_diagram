@@ -53,7 +53,7 @@ public:
                 if(getPos(i, j) != 0) {
                     std::cout << std::setw(3) << std::setfill(' ') << getPos(i, j) << " ";
                 }else {
-                    std::cout << "  _ ";
+                    std::cout << "    ";
                 }
             }
             std::cout << std::endl;
