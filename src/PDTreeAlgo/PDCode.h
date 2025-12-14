@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 
-// 用于描述 PdCode 中的一个交叉点的信息
-#include "PDCrossing.h"
+#include "NumInput.h"
+#include "PDCrossing.h" // 用于描述 PdCode 中的一个交叉点的信息
 
 // 描述一个扭结的 PD_CODE
 // 其中关键为：有 n 个 crossing 描述符
@@ -87,30 +87,26 @@ public:
 
         // 清空原来记录的扭结信息
         pd_code.clear();
+        
+        // 输入所有的字符，从中读取一个 pd_code
+        auto int_vec = extractIntegersFromStream(std::cin);
+        assert(int_vec.size() != 0);
+        assert(int_vec.size() % 4 == 0);
+        n = int_vec.size() / 4;
 
+        
         // cnt[i] 用于统计编号为 i 的插头出现了多少次
         // 每个插头应当恰好出现两次扭结才合法
         std::map<int, int> cnt;
-        
-        // 先输入扭结的交叉点个数
-        input_stream >> n;
 
-        // 对于每一个交叉点，依次输入 PD_CODE 中的四个插头
-        // 输入的顺序是从下方进入边编号开始逆时针顺序遍历四个插头的编号
         for(int i = 0; i < n; i += 1) {
-            
-            // 输入一个交叉点处的四个插头
-            std::vector<int> crs;
+            std::vector<int> pd_crossing;
             for(int j = 0; j < 4; j += 1) {
-                int idx;
-                input_stream >> idx;
-                crs.push_back(idx);
-
-                // 统计每种插头编号出现的次数
-                if(cnt.count(idx) == 0) cnt[idx] = 0;
-                cnt[idx] += 1;
+                int pos = i * 4 + j;
+                pd_crossing.push_back(int_vec[pos]);
+                cnt[int_vec[pos]] += 1;
             }
-            pd_code.push_back(crs);
+            pd_code.push_back(pd_crossing);
         }
 
         // 首先这个扭结中总共会出现 4n 个插头
