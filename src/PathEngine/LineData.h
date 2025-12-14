@@ -28,4 +28,8 @@ public:
     LineData setAimPos(int new_xt, int new_yt) const { // 设置新的目标点
         return LineData(xf, new_xt, yf, new_yt, v);
     }
+
+    LineData setStartPos(int new_xf, int new_yf) const { // 设置新的起始点
+        return LineData(new_xf, xt, new_yf, yt, v);
+    }
 };

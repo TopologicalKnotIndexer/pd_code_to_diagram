@@ -92,8 +92,9 @@ public:
 
         // 起始位置和终止位置重合，直接就能走到，返回即可
         if(xf == xt && yf == yt) {
+            std::cerr << "warning: begin and end at same point" << std::endl;
             return std::make_tuple(
-                -1.0,
+                0.0,
                 std::vector<LineData>({LineData(xf, xt, yf, yt, 0)})
             );
         }
@@ -104,6 +105,7 @@ public:
         // -1: 横向在下方的交叉点
         // -2: 纵向在下方的交叉点
         auto gew = MarginGraphEngineWrap(age, xmin, xmax, ymin, ymax, -3, xf, yf, xt, yt);
+        gew.debugOutput();
         
         // q 记录所有已经在 dis 中出现但还没有进行拓展的节点
         std::queue<PosType> q;

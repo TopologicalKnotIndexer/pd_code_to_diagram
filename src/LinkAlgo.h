@@ -7,10 +7,16 @@
 #include "PathEngine/VectorGraphEngine.h"
 #include "PathEngine/ErasePointGraphEngineWrap.h"
 #include "PathEngine/MergeGraphEngineWrap.h"
+#include "PathEngine/PixelGraphEngine.h"
 #include "PDTreeAlgo/SocketInfo.h"
 #include "PathEngine/SpanGraphEngineWrap.h"
 #include "PathEngine/SpfaPathEngine.h"
 #include "Utils/Coord2dPosition.h"
+
+template<typename T>
+void vecPushFront(std::vector<T>& vec, T&& value) {
+    vec.insert(vec.begin(), std::forward<T>(value));
+}
 
 // 给定一组 socket 信息，计算节点之间的连接关系
 class LinkAlgo {
@@ -21,7 +27,8 @@ private:
     const int crossing_cnt;
 
     void rawParsify(int k) {
-        const auto& pr = treeEdgeVGE.parsifyDryRun(k);
+        const auto& pr = 
+            (!treeEdgeVGE.empty()) ? treeEdgeVGE.parsifyDryRun(k) : crossingVGE.parsifyDryRun(k);
         socket_info.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
         treeEdgeVGE.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
         crossingVGE.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
@@ -69,17 +76,65 @@ private:
         ymin -= 5;
         ymax += 5;
 
-        auto pr = SpfaPathEngine().runAlgo(epgew, xmin, xmax, ymin, ymax, x1, y1, x2, y2);
-        assert(std::get<0>(pr) != -1.0);     // 如果这里条件不成立，说明原来的图不是平面图
-        assert(std::get<1>(pr).size() != 0); // 如果这里条件不成立，说明原来的图不是平面图
+        // 保存路径结果
+        std::vector<LineData> path;
+        if(x1 != x2 || y1 != y2) {
+            auto pr = SpfaPathEngine().runAlgo(epgew, xmin, xmax, ymin, ymax, x1, y1, x2, y2);
+            assert(std::get<0>(pr) != -1.0);     // 如果这里条件不成立，说明原来的图不是平面图
+            assert(std::get<1>(pr).size() != 0); // 如果这里条件不成立，说明原来的图不是平面图
 
-        auto dis  = std::get<0>(pr);
-        auto path = std::get<1>(pr);
+            auto dis  = std::get<0>(pr);
+            path = std::get<1>(pr);
+        }else {
+            // 说明起点和终点是同一个点
+            // 那么我们需要把中心点堵住，然后构建两个 socket 端点的路径
+            // 最后再把路径修改回中心点
+            PixelGraphEngine single_point_graph;
+
+            std::cout << "x1, y1: " << x1 << " " << y1 << std::endl;
+
+            single_point_graph.setPos(x1, y1, -3); // 把中心点设置为障碍物
+            MergeGraphEngineWrap nmgew(single_point_graph, epgew);
+            assert(nmgew.getPos(x1, y1) != 0);
+
+            // 获取得到相应的起始点坐标
+            int new_x1, new_y1; Direction new_d1; std::tie(new_x1, new_y1, new_d1) = vec[0];
+            int new_x2, new_y2; Direction new_d2; std::tie(new_x2, new_y2, new_d2) = vec[1];
+            assert(new_x1 == x1 && new_y1 == y1);
+            assert(new_x2 == x2 && new_y2 == y2);
+
+            // 获取位置偏移
+            int dx1 = (int)round(Coord2dPosition::getDeltaPositionByDirection(new_d1).getX());
+            int dy1 = (int)round(Coord2dPosition::getDeltaPositionByDirection(new_d1).getY());
+            int dx2 = (int)round(Coord2dPosition::getDeltaPositionByDirection(new_d2).getX());
+            int dy2 = (int)round(Coord2dPosition::getDeltaPositionByDirection(new_d2).getY());
+
+            // 构建新坐标（距离中心点的距离总是 1）
+            new_x1 += dx1;
+            new_y1 += dy1;
+            new_x2 += dx2;
+            new_y2 += dy2;
+
+            // 计算最短路
+            auto pr = SpfaPathEngine().runAlgo(nmgew, xmin, xmax, ymin, ymax, new_x1, new_y1, new_x2, new_y2);
+            assert(std::get<0>(pr) != -1.0);     // 如果这里条件不成立，说明原来的图不是平面图
+            assert(std::get<1>(pr).size() != 0); // 如果这里条件不成立，说明原来的图不是平面图
+
+            auto dis  = std::get<0>(pr);
+            path = std::get<1>(pr);
+
+            // 重新设置起点和终点
+            assert(x1 == x2 && y1 == y2);
+            vecPushFront(path, LineData(x1, path[0].getXf(), y1, path[0].getYf(), 0));
+            path.push_back(LineData(path[path.size() - 1].getXt(), x1, path[path.size() - 1].getYt(), y1, 0));
+        }
 
         // 把这条路线直接放入地图中并将当前节点标记为已经使用过的
         for(const LineData& ld: path) {
             auto line_data_now = ld.setV(socket_id); // 编号必须写成当前 socket_id
             treeEdgeVGE.setLine(line_data_now);
+            std::cout << "line_data_now: " << line_data_now.getXf() << " " << line_data_now.getYf() << " -> "
+                << line_data_now.getXt() << " " << line_data_now.getYt() << std::endl;
         }
         socket_info.setUsed(socket_id, true); // 设为已经使用过了
     }

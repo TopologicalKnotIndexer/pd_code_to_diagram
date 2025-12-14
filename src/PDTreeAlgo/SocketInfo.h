@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 
+#include "../Utils/Debug.h"
 #include "../Utils/Direction.h"
 #include "../PathEngine/VectorGraphEngine.h"
 
@@ -114,6 +115,10 @@ public:
     // 需要能够重新调整所有坐标
     void commitCoordMap(const std::map<int, int>& mapFuncX, const std::map<int, int>& mapFuncY) {
         assert(checked == true);
+
+        // debugOutput();
+        // debugMap("mapFuncX", mapFuncX);
+        // debugMap("mapFuncY", mapFuncY);
         
         SocketInfo new_socket_info;
         new_socket_info.socket_used = socket_used; // 直接拷贝 “使用否” 矩阵
@@ -222,6 +227,15 @@ public:
         std::cout << "crossing_base_direction: " << std::endl;
         for(auto pr: crossing_base_direction) {
             std::cout << "    (" << std::get<0>(pr.first) << ", " << std::get<1>(pr.first) << "): " << (int)pr.second << std::endl;
+        }
+        std::cout << "socket_info: " << std::endl;
+        for(auto pr: socket_info) {
+            std::cout << "    " << pr.first << ": ";
+            for(auto xyd: pr.second) {
+                int x, y; Direction d; std::tie(x, y, d) = xyd;
+                std::cout << " (" << x << ", " << y << ", " << (int)d << ") ";
+            }
+            std::cout << std::endl;
         }
     }
 };

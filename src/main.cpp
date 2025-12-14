@@ -42,6 +42,7 @@ int main() {
 
     std::cout << "running link algo ..." << std::endl;
     LinkAlgo link_algo(pd_code.getCrossingNumber(), s_info);
+    link_algo.getFinalGraph().debugOutput();
 
     std::cout << "output ans ..." << std::endl;
     GenNodeSetAlgo gen_node_set_algo(link_algo.getFinalGraph(), link_algo.getAllEdges());

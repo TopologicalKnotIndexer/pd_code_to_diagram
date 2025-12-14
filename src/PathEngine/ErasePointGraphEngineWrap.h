@@ -35,8 +35,8 @@ public:
     }
 
     virtual int getPos(int x, int y) const override {
-        if(force_empty_pos.size() != 4) {
-            std::cerr << "warning: in ErasePointGraphEngineWrap, force_empty_pos.size() != 4" << std::endl;
+        if(force_empty_pos.size() != 3 && force_empty_pos.size() != 4) {
+            std::cerr << "warning: in ErasePointGraphEngineWrap, force_empty_pos.size() != 3 or 4" << std::endl;
             assert(false);
         }
 

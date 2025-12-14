@@ -17,6 +17,10 @@ private:
 public:
     virtual ~VectorGraphEngine(){}
 
+    bool empty() const {
+        return lineDataSet.empty();
+    }
+
     virtual int getPos(int x, int y) const override {
         return pge.getPos(x, y);
     }

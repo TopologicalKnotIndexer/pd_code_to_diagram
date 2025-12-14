@@ -15,7 +15,7 @@ public:
 
     MergeGraphEngineWrap(
         const AbstractGraphEngine& _age_front, const AbstractGraphEngine& _age_next):
-        age_front(_age_front), age_next(_age_next) {}
+        age_front(_age_front), age_next(_age_next){}
     
     // 优先使用 age_front 中的元素，除非 age_front 中没有指定其中的任何值
     virtual int getPos(int x, int y) const override {

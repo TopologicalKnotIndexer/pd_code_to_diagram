@@ -77,16 +77,24 @@ private:
             auto val = age.getPos(xmid, ymid);
             assert(val == -1 || val == -2);
 
-            const int dx = (val == -1) ? 1 : 0; // 用来表明延伸方向
+            const int dx = (val == -1) ? 0 : 1; // 用来表明延伸方向
             const int dy = 1 - dx;
-            std::tuple<int, int, int> pos1 = std::make_tuple(xmid - dx, ymid - dy, 1);
-            std::tuple<int, int, int> pos2 = std::make_tuple(xmid +  0, ymid +  0, 1);
-            std::tuple<int, int, int> pos3 = std::make_tuple(xmid + dx, ymid + dy, 1);
+            auto pos1 = std::make_tuple(xmid - dx, ymid - dy, 1);
+            auto pos2 = std::make_tuple(xmid +  0, ymid +  0, 1);
+            auto pos3 = std::make_tuple(xmid + dx, ymid + dy, 1);
 
+            // 连接上方的跨越边
             linkDown(pos1);
             linkDown(pos3);
             link(pos1, pos2);
             link(pos2, pos3);
+
+            // 连接下方的直连边
+            auto pos4 = std::make_tuple(xmid - dy, ymid - dx, 0);
+            auto pos5 = std::make_tuple(xmid +  0, ymid +  0, 0);
+            auto pos6 = std::make_tuple(xmid + dy, ymid + dx, 0);
+            link(pos4, pos5);
+            link(pos5, pos6);
         }
     }
 public:
