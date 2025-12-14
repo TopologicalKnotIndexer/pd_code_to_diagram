@@ -6,6 +6,8 @@
 //#define NO_MAIN 
 
 #include <iostream>
+#include <string>
+#include <vector>
 
 #include "LinkAlgo.h"
 #include "NodeSet3D/GenNodeSetAlgo.h"
@@ -15,7 +17,21 @@
 
 const int DEBUG = 0;
 #ifndef NO_MAIN // 如果 NO_MAIN 标志存在，则不编译 main 函数
-int main() {
+int main(int argc, char** argv) {
+
+    // 获取所有参数
+    std::vector<std::string> args;
+    for(int i = 1; i < argc; i += 1) {
+        args.push_back(std::string(argv[i]));
+    }
+
+    // 是否要输出一个图
+    bool show_diagram = false;
+    for(int i = 0; i < args.size(); i += 1) {
+        if(args[i] == "--diagram" || args[i] == "-d") {
+            show_diagram = true;
+        }
+    }
 
     // 设置随机种子
     unsigned int seed = 42;
@@ -43,11 +59,15 @@ int main() {
 
     if(DEBUG) std::cout << "running link algo ..." << std::endl;
     LinkAlgo link_algo(pd_code.getCrossingNumber(), s_info);
-    // link_algo.getFinalGraph().debugOutput(); // 输出二维布局图
+    if(show_diagram) {
+        link_algo.getFinalGraph().debugOutput(); // 输出二维布局图
+    }
 
     if(DEBUG) std::cout << "output ans ..." << std::endl;
     GenNodeSetAlgo gen_node_set_algo(link_algo.getFinalGraph(), link_algo.getAllEdges());
-    gen_node_set_algo.outputGraph(std::cout); // 输出三维点坐标情况
+    if(!show_diagram) {
+        gen_node_set_algo.outputGraph(std::cout); // 输出三维点坐标情况
+    }
     return 0;
 }
 #endif
