@@ -100,7 +100,10 @@ public:
         
         // 构建一个新的 AbstractGraphEngine 用于限制活动范围
         // 同时将起点和终点的位置的值，强制归零
-        auto gew = MarginGraphEngineWrap(age, xmin, xmax, ymin, ymax, -1, xf, yf, xt, yt);
+        // 这里之所以使用 -3 是因为 -1 和 -2 有其他含义
+        // -1: 横向在下方的交叉点
+        // -2: 纵向在下方的交叉点
+        auto gew = MarginGraphEngineWrap(age, xmin, xmax, ymin, ymax, -3, xf, yf, xt, yt);
         
         // q 记录所有已经在 dis 中出现但还没有进行拓展的节点
         std::queue<PosType> q;

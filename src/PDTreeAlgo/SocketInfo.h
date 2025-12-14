@@ -15,6 +15,10 @@ private:
     // 理论上 vector 中恰好有两个元素
     std::map<int, std::vector<std::tuple<int, int, Direction>>> socket_info;
 
+    // 记录每个位置的交叉点的 base 方向
+    // 需要注意在 commitCoordMap 的时候，这里的值也需要跟着动
+    std::map<std::tuple<int, int>, Direction> crossing_base_direction;
+
     // 判断是否已经完成了信息完整性检查
     int checked;
 
@@ -22,6 +26,18 @@ public:
     ~SocketInfo(){}
     SocketInfo() { // 无参构造函数
         checked  = false;
+    }
+
+    // 记录 base 方向
+    void setBaseDirection(int x, int y, Direction d) {
+        assert(checked == false);
+        crossing_base_direction[std::make_tuple(x, y)] = d;
+    }
+
+    // 获取 base 方向
+    Direction getBaseDirection(int x, int y) const {
+        assert(crossing_base_direction.find(std::make_tuple(x, y)) != crossing_base_direction.end());
+        return crossing_base_direction.find(std::make_tuple(x, y)) -> second;
     }
 
     int getUsedCnt() const { // 统计有多少个边被使用过
@@ -82,6 +98,12 @@ public:
             if(socket_info[i].size() != 2) { // 在运行 check 函数的时候
                 assert(false);
             }
+            int x1, y1; Direction d1; std::tie(x1, y1, d1) = socket_info[i][0];
+            int x2, y2; Direction d2; std::tie(x2, y2, d2) = socket_info[i][1];
+
+            // 检查是否正确记录了方向信息
+            assert(crossing_base_direction.find(std::make_tuple(x1, y1)) != crossing_base_direction.end());
+            assert(crossing_base_direction.find(std::make_tuple(x2, y2)) != crossing_base_direction.end());
         }
         if(used_cnt != n - 1) { // 由于是一个有 n 个节点的树，所以当时恰好使用了 n - 1 条边
             assert(false);
@@ -115,6 +137,23 @@ public:
                 auto new_ynow = mapFuncY.find(ynow) -> second;
                 new_socket_info.addInfo(socket_id, new_xnow, new_ynow, dnow);
             }
+        }
+
+        // 对坐标进行平移
+        new_socket_info.crossing_base_direction.clear();
+        for(auto crossing_pr: crossing_base_direction) {
+            std::tuple<int, int> pr;
+            Direction d; 
+            std::tie(pr, d) = crossing_pr;
+
+            // 修改 x, y 坐标
+            int x = std::get<0>(pr);
+            int y = std::get<1>(pr);
+            assert(mapFuncX.find(x) != mapFuncX.end());
+            assert(mapFuncY.find(y) != mapFuncY.end());
+            auto xnew = mapFuncX.find(x) -> second;
+            auto ynew = mapFuncY.find(y) -> second;
+            new_socket_info.setBaseDirection(xnew, ynew, d);
         }
 
         // 使用默认拷贝构造，一次性成型
@@ -165,9 +204,24 @@ public:
             int xnow, ynow;
             std::tie(xnow, ynow) = coord2d;
 
-            // 这里的 -2 表示这个位置是一个交叉点
-            vge.setPos(xnow, ynow, -2);
+            // 这里的 neg_val 有两种取值
+            // -2: 表示这个交叉点的 base 方向是横着的
+            // -3: 表示这个交叉点的 base 方向是竖着的
+            int neg_val = -((int)(crossing_base_direction.find(coord2d) -> second) % 2 + 1);
+            vge.setPos(xnow, ynow, neg_val);
         }
         return vge;
+    }
+
+    void debugOutput() const {
+        std::cout << "checked: " << (int)checked << std::endl;
+        std::cout << "socket_used: " << std::endl;
+        for(auto pr: socket_used) {
+            std::cout << "    " << pr.first << ": " << (int)pr.second << std::endl;
+        }
+        std::cout << "crossing_base_direction: " << std::endl;
+        for(auto pr: crossing_base_direction) {
+            std::cout << "    (" << std::get<0>(pr.first) << ", " << std::get<1>(pr.first) << "): " << (int)pr.second << std::endl;
+        }
     }
 };

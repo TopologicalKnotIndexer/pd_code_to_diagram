@@ -339,6 +339,10 @@ public:
                 // 向结构中插入一个位置信息
                 socket_info.addInfo(socket_id, xpos, ypos, (Direction)d);
             }
+            socket_info.setBaseDirection( // 记录 base 方向
+                (int)round(structure[i].pos2d.getX()),
+                (int)round(structure[i].pos2d.getY()),
+                message[i].base_direction);
         }
         return socket_info;
     }
