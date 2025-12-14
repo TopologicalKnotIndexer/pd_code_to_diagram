@@ -90,9 +90,6 @@ private:
             // 那么我们需要把中心点堵住，然后构建两个 socket 端点的路径
             // 最后再把路径修改回中心点
             PixelGraphEngine single_point_graph;
-
-            std::cout << "x1, y1: " << x1 << " " << y1 << std::endl;
-
             single_point_graph.setPos(x1, y1, -3); // 把中心点设置为障碍物
             MergeGraphEngineWrap nmgew(single_point_graph, epgew);
             assert(nmgew.getPos(x1, y1) != 0);
@@ -133,8 +130,6 @@ private:
         for(const LineData& ld: path) {
             auto line_data_now = ld.setV(socket_id); // 编号必须写成当前 socket_id
             treeEdgeVGE.setLine(line_data_now);
-            std::cout << "line_data_now: " << line_data_now.getXf() << " " << line_data_now.getYf() << " -> "
-                << line_data_now.getXt() << " " << line_data_now.getYt() << std::endl;
         }
         socket_info.setUsed(socket_id, true); // 设为已经使用过了
     }

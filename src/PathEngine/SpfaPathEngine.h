@@ -105,7 +105,6 @@ public:
         // -1: 横向在下方的交叉点
         // -2: 纵向在下方的交叉点
         auto gew = MarginGraphEngineWrap(age, xmin, xmax, ymin, ymax, -3, xf, yf, xt, yt);
-        gew.debugOutput();
         
         // q 记录所有已经在 dis 中出现但还没有进行拓展的节点
         std::queue<PosType> q;
