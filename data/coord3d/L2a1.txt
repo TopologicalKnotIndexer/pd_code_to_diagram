@@ -1,0 +1,75 @@
+node_cnt 36
+edge_cnt 36
+node 1 pos 2 0 0
+node 2 pos 2 1 0
+node 3 pos 3 0 0
+node 4 pos 4 0 0
+node 5 pos 5 0 0
+node 6 pos 6 0 0
+node 7 pos 6 1 0
+node 8 pos 6 2 0
+node 9 pos 6 3 0
+node 10 pos 6 4 0
+node 11 pos 6 5 0
+node 12 pos 6 6 0
+node 13 pos 2 6 0
+node 14 pos 3 6 0
+node 15 pos 4 6 0
+node 16 pos 5 6 0
+node 17 pos 2 5 0
+node 18 pos 0 2 0
+node 19 pos 1 2 0
+node 20 pos 0 3 0
+node 21 pos 0 4 0
+node 22 pos 1 4 0
+node 23 pos 3 2 0
+node 24 pos 4 2 0
+node 25 pos 4 3 0
+node 26 pos 4 4 0
+node 27 pos 3 4 0
+node 28 pos 2 1 1
+node 29 pos 2 3 1
+node 30 pos 2 3 0
+node 31 pos 2 2 1
+node 32 pos 2 2 0
+node 33 pos 1 4 1
+node 34 pos 3 4 1
+node 35 pos 2 4 1
+node 36 pos 2 4 0
+link 1 2
+link 1 3
+link 2 28
+link 3 4
+link 4 5
+link 5 6
+link 6 7
+link 7 8
+link 8 9
+link 9 10
+link 10 11
+link 11 12
+link 12 16
+link 13 14
+link 13 17
+link 14 15
+link 15 16
+link 17 36
+link 18 19
+link 18 20
+link 19 32
+link 20 21
+link 21 22
+link 22 33
+link 23 24
+link 23 32
+link 24 25
+link 25 26
+link 26 27
+link 27 34
+link 28 31
+link 29 30
+link 29 31
+link 30 36
+link 33 35
+link 34 35
+

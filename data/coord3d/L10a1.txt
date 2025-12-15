@@ -1,5 +1,5 @@
-node_cnt 342
-edge_cnt 332
+node_cnt 352
+edge_cnt 352
 node 1 pos 11 14 0
 node 2 pos 12 14 0
 node 3 pos 13 14 0
@@ -306,64 +306,78 @@ node 303 pos 8 10 0
 node 304 pos 9 10 0
 node 305 pos 10 10 0
 node 306 pos 10 11 0
-node 307 pos 10 11 1
-node 308 pos 10 13 1
-node 309 pos 10 13 0
-node 310 pos 10 12 1
-node 311 pos 9 14 1
-node 312 pos 11 14 1
-node 313 pos 10 14 1
-node 314 pos 10 19 1
-node 315 pos 10 21 1
-node 316 pos 10 21 0
-node 317 pos 10 20 1
-node 318 pos 9 22 1
-node 319 pos 11 22 1
-node 320 pos 10 22 1
-node 321 pos 16 13 1
-node 322 pos 16 15 1
-node 323 pos 16 14 1
-node 324 pos 18 11 1
-node 325 pos 18 13 1
-node 326 pos 18 13 0
-node 327 pos 18 12 1
-node 328 pos 17 14 1
-node 329 pos 17 14 0
-node 330 pos 19 14 1
-node 331 pos 18 14 1
-node 332 pos 20 3 1
-node 333 pos 20 5 1
-node 334 pos 20 4 1
-node 335 pos 19 12 1
-node 336 pos 19 12 0
-node 337 pos 21 12 1
-node 338 pos 20 12 1
-node 339 pos 21 4 1
-node 340 pos 21 4 0
-node 341 pos 23 4 1
-node 342 pos 22 4 1
+node 307 pos 9 12 1
+node 308 pos 11 12 1
+node 309 pos 10 12 1
+node 310 pos 10 12 0
+node 311 pos 10 13 0
+node 312 pos 10 13 1
+node 313 pos 10 15 1
+node 314 pos 10 14 1
+node 315 pos 10 14 0
+node 316 pos 9 20 1
+node 317 pos 11 20 1
+node 318 pos 10 20 1
+node 319 pos 10 20 0
+node 320 pos 10 21 0
+node 321 pos 10 21 1
+node 322 pos 10 23 1
+node 323 pos 10 22 1
+node 324 pos 10 22 0
+node 325 pos 15 14 1
+node 326 pos 17 14 1
+node 327 pos 17 14 0
+node 328 pos 16 14 1
+node 329 pos 16 14 0
+node 330 pos 17 12 1
+node 331 pos 19 12 1
+node 332 pos 19 12 0
+node 333 pos 18 12 1
+node 334 pos 18 12 0
+node 335 pos 18 13 0
+node 336 pos 18 13 1
+node 337 pos 18 15 1
+node 338 pos 18 14 1
+node 339 pos 18 14 0
+node 340 pos 19 4 1
+node 341 pos 21 4 1
+node 342 pos 21 4 0
+node 343 pos 20 4 1
+node 344 pos 20 4 0
+node 345 pos 20 11 1
+node 346 pos 20 13 1
+node 347 pos 20 12 1
+node 348 pos 20 12 0
+node 349 pos 22 3 1
+node 350 pos 22 5 1
+node 351 pos 22 4 1
+node 352 pos 22 4 0
 link 1 2
-link 1 312
+link 1 315
 link 2 3
 link 3 4
 link 4 5
+link 5 325
 link 6 7
-link 6 333
+link 6 344
 link 7 8
 link 8 9
 link 9 10
 link 10 11
 link 11 12
+link 12 345
 link 13 14
+link 13 313
 link 14 15
 link 15 16
 link 16 17
-link 17 314
+link 17 319
 link 18 19
 link 18 20
-link 19 321
+link 19 329
+link 20 330
 link 21 22
-link 21 322
+link 21 329
 link 22 23
 link 23 24
 link 24 25
@@ -397,16 +411,19 @@ link 51 52
 link 51 55
 link 52 53
 link 53 54
+link 55 349
 link 56 57
-link 56 337
+link 56 348
 link 57 64
 link 58 59
+link 58 350
 link 59 60
 link 60 61
 link 61 62
 link 62 63
 link 63 64
 link 65 66
+link 65 322
 link 66 74
 link 67 68
 link 67 92
@@ -454,8 +471,9 @@ link 109 110
 link 110 111
 link 111 112
 link 112 113
-link 113 324
+link 113 334
 link 114 115
+link 114 337
 link 115 116
 link 116 117
 link 117 118
@@ -475,9 +493,9 @@ link 129 130
 link 130 131
 link 131 132
 link 132 133
-link 134 341
+link 134 352
 link 135 136
-link 135 319
+link 135 324
 link 136 137
 link 137 138
 link 138 139
@@ -539,13 +557,14 @@ link 193 194
 link 194 195
 link 195 196
 link 196 197
+link 197 340
 link 198 199
 link 198 217
 link 199 200
 link 200 201
 link 201 202
 link 202 203
-link 203 318
+link 203 324
 link 204 205
 link 204 218
 link 205 206
@@ -572,15 +591,19 @@ link 226 227
 link 227 228
 link 228 229
 link 229 230
+link 230 308
 link 231 232
 link 231 234
-link 232 311
+link 232 315
 link 233 234
 link 233 235
+link 235 307
 link 236 237
-link 236 330
+link 236 339
 link 237 238
+link 238 346
 link 239 240
+link 239 317
 link 240 241
 link 241 242
 link 242 243
@@ -628,11 +651,12 @@ link 282 283
 link 283 284
 link 285 286
 link 286 287
-link 287 332
+link 287 344
 link 288 289
 link 288 301
 link 289 290
 link 290 291
+link 291 316
 link 292 293
 link 292 302
 link 293 294
@@ -647,31 +671,37 @@ link 302 303
 link 303 304
 link 304 305
 link 305 306
-link 306 307
-link 307 310
+link 306 310
+link 307 309
 link 308 309
-link 308 310
-link 311 313
-link 312 313
-link 314 317
-link 315 316
-link 315 317
-link 318 320
+link 310 311
+link 311 312
+link 312 314
+link 313 314
+link 316 318
+link 317 318
 link 319 320
+link 320 321
 link 321 323
 link 322 323
-link 324 327
-link 325 326
-link 325 327
-link 328 329
-link 328 331
-link 330 331
-link 332 334
-link 333 334
+link 325 328
+link 326 327
+link 326 328
+link 327 339
+link 330 333
+link 331 332
+link 331 333
+link 332 348
+link 334 335
 link 335 336
-link 335 338
+link 336 338
 link 337 338
-link 339 340
-link 339 342
+link 340 343
 link 341 342
+link 341 343
+link 342 352
+link 345 347
+link 346 347
+link 349 351
+link 350 351
 
