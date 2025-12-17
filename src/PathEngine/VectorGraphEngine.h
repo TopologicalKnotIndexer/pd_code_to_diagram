@@ -5,8 +5,8 @@
 #include <vector>
 
 #include "AbstractGraphEngine.h"
+#include "Coord2dSet.h"
 #include "LineData.h"
-#include "IntegerSet.h"
 #include "PixelGraphEngine.h"
 
 class VectorGraphEngine: public AbstractGraphEngine {
@@ -38,51 +38,21 @@ public:
         return pge.getBorderCoord();
     }
 
-    // 对坐标集合进行稀疏化
-    // k 为稀疏化系数，即让最小的坐标差距为 (k-1)，所以 k 应当大于等于 1
-    // 返回值是 MapX 以及 MapY 描述旧的坐标如何被映射成新的坐标
     // 这里不会真的进行稀疏化，而是返回一个稀疏化方案，实际的稀疏化需要调用 commitCoordMap
-    std::tuple<std::map<int, int>, std::map<int, int>> 
-    parsifyDryRun(int k) const {
-        assert(k >= 1);
-        IntegerSet intSetX; // 把所有坐标加入到一个集合中
-        IntegerSet intSetY;
+    // 这里只会统计 x, y 坐标的出现值集合
+    Coord2dSet
+    getCoord2dSet() const {
+        Coord2dSet ans;
         for(auto lineData: lineDataSet) {
-            int xf, xt, yf, yt;
-            xf = lineData.getXf();
-            xt = lineData.getXt();
-            yf = lineData.getYf();
-            yt = lineData.getYt();
-            intSetX.addInt(xf);
-            intSetX.addInt(xt);
-            intSetY.addInt(yf);
-            intSetY.addInt(yt);
+            ans.addPos(lineData.getXf(), lineData.getYf());
+            ans.addPos(lineData.getXt(), lineData.getYt());
         }
-
-        // 描述原来的坐标如何被映射成新的坐标
-        std::map<int, int> mapFuncX; 
-        std::map<int, int> mapFuncY;
-
-        for(auto lineData: lineDataSet) {
-            int xf, xt, yf, yt;
-            xf = lineData.getXf();
-            xt = lineData.getXt();
-            yf = lineData.getYf();
-            yt = lineData.getYt();
-
-            // 记录所有坐标是如何变化的
-            mapFuncX[xf] = intSetX.rank(xf) * k;
-            mapFuncX[xt] = intSetX.rank(xt) * k;
-            mapFuncY[yf] = intSetY.rank(yf) * k;
-            mapFuncY[yt] = intSetY.rank(yt) * k;
-        }
-
-        // 描述坐标映射
-        return std::make_tuple(mapFuncX, mapFuncY);
+        return ans;
     }
 
     // 对所有坐标值进行映射
-    void commitCoordMap(const std::map<int, int>& mapFuncX, const std::map<int, int>& mapFuncY) {
+    void commitCoordMap(Coord2dSet& coord2d_set, int k) {
+        assert(k >= 1);
         // 构建新的 std::vector<LineData> 和 PixelGraphEngine
         std::vector<LineData> new_lineDataSet;
         PixelGraphEngine      new_pge;
@@ -94,18 +64,11 @@ public:
             yf = lineData.getYf();
             yt = lineData.getYt();
 
-            // 检验被映射的值的合法性
-            // 如果有一些值没有指定怎么映射，那么这个映射方案本身不合法
-            assert(mapFuncX.find(xf) != mapFuncX.end());
-            assert(mapFuncX.find(xt) != mapFuncX.end());
-            assert(mapFuncY.find(yf) != mapFuncY.end());
-            assert(mapFuncY.find(yt) != mapFuncY.end());
-
             auto new_lineData = LineData(
-                mapFuncX.find(xf) -> second,
-                mapFuncX.find(xt) -> second,
-                mapFuncY.find(yf) -> second,
-                mapFuncY.find(yt) -> second,
+                coord2d_set.xkRank(xf, k),
+                coord2d_set.xkRank(xt, k),
+                coord2d_set.ykRank(yf, k),
+                coord2d_set.ykRank(yt, k),
                 lineData.getV()
             );
 

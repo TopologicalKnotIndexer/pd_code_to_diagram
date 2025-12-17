@@ -55,10 +55,11 @@ int main(int argc, char** argv) {
 
     if(DEBUG) std::cout << "generating and checking socket_info ..." << std::endl;
     SocketInfo s_info = pd_tree.getSocketInfo(); // 生成完全的插头信息
-    s_info.check(pd_code.getCrossingNumber());   // 检查信息合法性
+    int component_cnt = pd_tree.getComponentCnt();
+    s_info.check(pd_code.getCrossingNumber(), component_cnt);   // 检查信息合法性
 
     if(DEBUG) std::cout << "running link algo ..." << std::endl;
-    LinkAlgo link_algo(pd_code.getCrossingNumber(), s_info);
+    LinkAlgo link_algo(pd_code.getCrossingNumber(), s_info, component_cnt);
     if(show_diagram) {
         link_algo.getFinalGraph().debugOutput(); // 输出二维布局图
     }

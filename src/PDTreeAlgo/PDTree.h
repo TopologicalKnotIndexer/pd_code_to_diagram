@@ -40,6 +40,9 @@ class PDTree {
 private:
     PDCode pd_code;
 
+    // 记录底图连通分支的数目
+    int component_cnt;
+
     // 描述树的结构：
     // 0 号节点表示空节点，不存储任何信息
     std::vector<TreeNode> structure;
@@ -204,14 +207,8 @@ private:
     // 1. 这个 socket 目前必须是空闲的
     // 2. 这个 socket 对应的编号，目前在树上恰出现一次
     // 3. 如果有多个可用的，优先选择 right 最大的 socket
-    LeafInfo getBestSocket(int root) {
-        // leaf_id_map 第一次遇到某个 socket_id 时
-        // leaf_id_map[socket_id] 赋值为这个 socket 的 LeafInfo
-        // 第二次遇到同样的 socket_id 时，在 leaf_id_map 上删除 leaf_id_map[socket_id]
-        std::map<int, LeafInfo> leaf_id_map;
-        dfs(root, -1, leaf_id_map); // 这里的 fa 如果设为 0 会导致错误跳过一些分支
-
-        // 如果没有空闲的插头，说明树已经建完，不可以再调用 getBestSocket
+    LeafInfo getBestSocket(int root, const std::map<int, LeafInfo>& leaf_id_map) {
+        assert(root >= 0);
         assert(leaf_id_map.size() > 0);
 
         // 对 leaf_id_map 序列化，以便于排序取一个元素出来
@@ -225,6 +222,22 @@ private:
         return leaf_id_list[0];
     }
 
+    std::tuple<bool, std::map<int, LeafInfo>> checkGetSocket(int root) {
+        if(root <= -1) {
+            return std::make_tuple(false, std::map<int, LeafInfo>());
+        }
+        assert(root >= 0);
+
+        // leaf_id_map 第一次遇到某个 socket_id 时
+        // leaf_id_map[socket_id] 赋值为这个 socket 的 LeafInfo
+        // 第二次遇到同样的 socket_id 时，在 leaf_id_map 上删除 leaf_id_map[socket_id]
+        std::map<int, LeafInfo> leaf_id_map;
+        dfs(root, -1, leaf_id_map); // 这里的 fa 如果设为 0 会导致错误跳过一些分支
+
+        // 如果没有空闲的插头，说明树已经建完，不可以再调用 getBestSocket
+        return std::make_tuple(leaf_id_map.size() > 0, leaf_id_map);
+    }
+
     // 从零开始构建一棵四岔树
     void buildTree() {
         // 预先保存所有交叉点数
@@ -235,47 +248,65 @@ private:
         std::vector<PDCrossing> unused;
         for(int i = 0; i < n; i += 1) unused.push_back(pd_code.getCrossing(i));
 
-        // 先随机选择一个节点，用于生成根节点
-        // 根节点默认 base 方向朝向正东方向，并且坐标放置在原点处
-        int root = newTreeNode();
-        message[root].pd_crossing = popRandomCrossing(unused);
-        message[root].base_direction = Direction::EAST;
-        structure[root].pos2d = Coord2dPosition();
+        // 由于可能有多个连通分支，因此需要每个连通分支处理完之后再处理其他连通分支
+        int root = -1;
+        int used_crossing_cnt = 0;
+        component_cnt = 0; // 生成了多少次 root 说明底图有多少个连通分支
 
         // 如果还有没有放到树上的节点，则运行下面的循环
         while(unused.size() > 0) {
+            auto pr = checkGetSocket(root);
+            if(!std::get<0>(pr)) {
+                // 先随机选择一个节点，用于生成根节点
+                // 根节点默认 base 方向朝向正东方向，并且坐标放置在原点处
+                root = newTreeNode();
+                message[root].pd_crossing = popRandomCrossing(unused);
+                message[root].base_direction = Direction::EAST;
+                structure[root].pos2d = Coord2dPosition(used_crossing_cnt + 1, used_crossing_cnt + 1);
+                component_cnt += 1; // 新增连通分支
 
-            // 选择一个最优 socket_id 进行拓展
-            LeafInfo leaf_info = getBestSocket(root);
+            }else {
 
-            // 在 unused 序列中找到第一次出现这个 socket_id 的 crossing
-            // 根据这个 crossing 的信息新建一个节点 
-            int new_node = newTreeNode();
-            message[new_node].pd_crossing = popCrossingBySocketId(unused, leaf_info.socket_id);
+                // 选择一个最优 socket_id 进行拓展
+                LeafInfo leaf_info = getBestSocket(root, std::get<1>(pr));
 
-            // 计算对面的方向
-            auto oppo_dir = (Direction)((2 + (int)leaf_info.dir)% 4);
+                // 在 unused 序列中找到第一次出现这个 socket_id 的 crossing
+                // 根据这个 crossing 的信息新建一个节点 
+                int new_node = newTreeNode();
+                message[new_node].pd_crossing = popCrossingBySocketId(unused, leaf_info.socket_id);
 
-            // baseShift 的含义是
-            // 要想将当前 crossing 编号为 socket_id 的 socket 移动到 aim_dir 方向
-            // 需要让 base 方向朝向哪里
-            message[new_node].base_direction = message[new_node].pd_crossing.baseShift(
-                leaf_info.socket_id, oppo_dir);
-            
-            // 让父子节点相认
-            // 连接两条单向边，再放置子节点的正确坐标位置
-            structure[new_node].next_node[(int)oppo_dir] = leaf_info.node_id;
-            structure[leaf_info.node_id].next_node[(int)leaf_info.dir] = new_node;
-            structure[new_node].pos2d = Coord2dPosition::add(
-                structure[leaf_info.node_id].pos2d, 
-                Coord2dPosition::getDeltaPositionByDirection(leaf_info.dir));
+                // 计算对面的方向
+                auto oppo_dir = (Direction)((2 + (int)leaf_info.dir)% 4);
 
-            // 将刚刚链接起来的边记录为已经使用过的
-            socket_used[leaf_info.socket_id] = true;
+                // baseShift 的含义是
+                // 要想将当前 crossing 编号为 socket_id 的 socket 移动到 aim_dir 方向
+                // 需要让 base 方向朝向哪里
+                message[new_node].base_direction = message[new_node].pd_crossing.baseShift(
+                    leaf_info.socket_id, oppo_dir);
+                
+                // 让父子节点相认
+                // 连接两条单向边，再放置子节点的正确坐标位置
+                structure[new_node].next_node[(int)oppo_dir] = leaf_info.node_id;
+                structure[leaf_info.node_id].next_node[(int)leaf_info.dir] = new_node;
+                structure[new_node].pos2d = Coord2dPosition::add(
+                    structure[leaf_info.node_id].pos2d, 
+                    Coord2dPosition::getDeltaPositionByDirection(leaf_info.dir));
+
+                // 将刚刚链接起来的边记录为已经使用过的
+                socket_used[leaf_info.socket_id] = true;
+            }
+
+            // 每循环一轮都一定会放置一个节点到屏幕
+            used_crossing_cnt += 1;
         }
     }
 
 public:
+
+    int getComponentCnt() const {
+        assert(pd_code.getCrossingNumber() >= 1);
+        return component_cnt;
+    }
     
     // 把对象恢复到初始化之前的状态
     void clear() {

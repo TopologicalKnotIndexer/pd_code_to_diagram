@@ -27,11 +27,13 @@ private:
     const int crossing_cnt;
 
     void rawParsify(int k) {
-        const auto& pr = 
-            (!treeEdgeVGE.empty()) ? treeEdgeVGE.parsifyDryRun(k) : crossingVGE.parsifyDryRun(k);
-        socket_info.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
-        treeEdgeVGE.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
-        crossingVGE.commitCoordMap(std::get<0>(pr), std::get<1>(pr));
+        auto c2ds1 = treeEdgeVGE.getCoord2dSet();
+        auto c2ds2 = crossingVGE.getCoord2dSet();
+        auto c2dsm = Coord2dSet::merge(c2ds1, c2ds2);
+
+        socket_info.commitCoordMap(c2dsm, k);
+        treeEdgeVGE.commitCoordMap(c2dsm, k);
+        crossingVGE.commitCoordMap(c2dsm, k);
     }
 
     // 保持两个节点之间距离
@@ -158,11 +160,13 @@ private:
 
 public:
     ~LinkAlgo(){}
-    LinkAlgo(int _crossing_cnt, const SocketInfo& _socket_info): 
+
+    // component_cnt 是底图连通分支数目
+    LinkAlgo(int _crossing_cnt, const SocketInfo& _socket_info, int component_cnt): 
         socket_info(_socket_info), crossing_cnt(_crossing_cnt) {
-        socket_info.check(_crossing_cnt);           // 保证数据合法
-        treeEdgeVGE = socket_info.getTreeEdgeVGE(); // 所有的树边
-        crossingVGE = socket_info.getCrossingVGE(); // 所有的交叉点节点
+        socket_info.check(_crossing_cnt, component_cnt); // 保证数据合法
+        treeEdgeVGE = socket_info.getTreeEdgeVGE();      // 所有的树边
+        crossingVGE = socket_info.getCrossingVGE();      // 所有的交叉点节点
         buildAll();
     }
 

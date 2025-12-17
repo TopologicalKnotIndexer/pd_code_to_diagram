@@ -88,7 +88,8 @@ public:
     }
 
     // 检查数据合法性
-    void check(int n) { // 这里的 n 是 crossing number
+    // component_cnt 是底图连通分支数目
+    void check(int n, int component_cnt) { // 这里的 n 是 crossing number
         if(checked) return;
 
         int used_cnt = 0;
@@ -106,20 +107,16 @@ public:
             assert(crossing_base_direction.find(std::make_tuple(x1, y1)) != crossing_base_direction.end());
             assert(crossing_base_direction.find(std::make_tuple(x2, y2)) != crossing_base_direction.end());
         }
-        if(used_cnt != n - 1) { // 由于是一个有 n 个节点的树，所以当时恰好使用了 n - 1 条边
+        if(used_cnt != n - component_cnt) { // 由于是一个有 n 个节点的树，所以当时恰好使用了 n - 1 条边
             assert(false);
         }
         checked = true;
     }
 
     // 需要能够重新调整所有坐标
-    void commitCoordMap(const std::map<int, int>& mapFuncX, const std::map<int, int>& mapFuncY) {
+    void commitCoordMap(Coord2dSet& coord2d_set, int k) {
         assert(checked == true);
 
-        // debugOutput();
-        // debugMap("mapFuncX", mapFuncX);
-        // debugMap("mapFuncY", mapFuncY);
-        
         SocketInfo new_socket_info;
         new_socket_info.socket_used = socket_used; // 直接拷贝 “使用否” 矩阵
         new_socket_info.checked = false;
@@ -133,13 +130,9 @@ public:
                 Direction dnow;
                 std::tie(xnow, ynow, dnow) = data;
 
-                // 要保证坐标被正确映射了
-                assert(mapFuncX.find(xnow) != mapFuncX.end());
-                assert(mapFuncY.find(ynow) != mapFuncY.end());
-
                 // 计算新的坐标
-                auto new_xnow = mapFuncX.find(xnow) -> second;
-                auto new_ynow = mapFuncY.find(ynow) -> second;
+                auto new_xnow = coord2d_set.xkRank(xnow, k);
+                auto new_ynow = coord2d_set.ykRank(ynow, k);
                 new_socket_info.addInfo(socket_id, new_xnow, new_ynow, dnow);
             }
         }
@@ -154,10 +147,9 @@ public:
             // 修改 x, y 坐标
             int x = std::get<0>(pr);
             int y = std::get<1>(pr);
-            assert(mapFuncX.find(x) != mapFuncX.end());
-            assert(mapFuncY.find(y) != mapFuncY.end());
-            auto xnew = mapFuncX.find(x) -> second;
-            auto ynew = mapFuncY.find(y) -> second;
+
+            auto xnew = coord2d_set.xkRank(x, k);
+            auto ynew = coord2d_set.ykRank(y, k);
             new_socket_info.setBaseDirection(xnew, ynew, d);
         }
 
