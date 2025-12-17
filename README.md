@@ -9,6 +9,8 @@ g++ -std=c++17 -g -o pdcode_to_diagram.exe src/main.cpp
 
 ## 运行项目
 
+### 从文件读入扭结
+
 先把一个扭结或者链环的 PD_CODE 存储到指定文件中（例如 `pdcode.txt`），下面给出了一个 PD_CODE 示例：
 ```
 [[6, 1, 7, 2], [8, 3, 5, 4], [2, 5, 3, 6], [4, 7, 1, 8]]
@@ -25,6 +27,13 @@ pdcode_to_diagram.exe <pdcode.txt
 ```bash
 pdcode_to_diagram.exe --diagram <pdcode.txt
 ```
+
+### 从标准输入读入扭结
+
+如果您试图从标准输入读入扭结，请注意您需要为标准输入引入 EOF，具体而言：
+
+1. 对 Windows 类操作系统，在输入完全部数据后，你还需要连续输入 Enter, Ctrl+Z, Enter 三个按键。
+2. 对类 Unix 操作系统（Linux, Mac OS 等等），在输入完全部数据后，你还需要连续输入 Enter, Ctrl+D, Enter 三个按键。
 
 ## 程序原理
 
