@@ -25,3 +25,7 @@ pdcode_to_diagram.exe <pdcode.txt
 ```bash
 pdcode_to_diagram.exe --diagram <pdcode.txt
 ```
+
+## 程序原理
+
+现在底图上跑一个最大边数生成森林（森林即生成树的不交并），保证森林中树边均满足折线段段数为一，再进行后续边连接。
