@@ -43,17 +43,29 @@ public:
         }
     }
 
+    virtual void outputValue(int val) const {
+        std::cout << std::setw(3) << std::setfill(' ') << val << " ";
+    }
+
     // 输出一个值域矩阵
-    virtual void debugOutput() const {
+    virtual void debugOutput(bool with_zero) const {
         int xmin, xmax, ymin, ymax;
         std::tie(xmin, xmax, ymin, ymax) = getBorderCoord();
+        xmin -= 1; // 拓宽边界
+        xmax += 1;
+        ymin -= 1;
+        ymax += 1;
 
         for(int i = xmin; i <= xmax; i += 1) {
             for(int j = ymin; j <= ymax; j += 1) {
                 if(getPos(i, j) != 0) {
-                    std::cout << std::setw(3) << std::setfill(' ') << getPos(i, j) << " ";
+                    outputValue(getPos(i, j));
                 }else {
-                    std::cout << "    ";
+                    if(with_zero) {
+                        outputValue(0); // with_zero 模式下会输出边界的 0
+                    }else {
+                        std::cout << "    ";
+                    }
                 }
             }
             std::cout << std::endl;

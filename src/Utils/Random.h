@@ -62,7 +62,7 @@ public:
     }
 };
 
-namespace random {
+namespace myrandom {
     // 获取一个随机整数
     inline int randomInt(int L, int R) {
         return RandomGenerator::randomInt(L, R);
@@ -72,4 +72,4 @@ namespace random {
     inline void setSeed(unsigned int seed) {
         RandomGenerator::set_seed(seed);
     }
-} // random
+} // myrandom

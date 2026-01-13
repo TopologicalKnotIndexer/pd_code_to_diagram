@@ -62,7 +62,7 @@ private:
     PDCrossing popRandomCrossing(std::vector<PDCrossing>& unused_list) {
         assert(unused_list.size() != 0);
 
-        int pos = random::randomInt(0, unused_list.size() - 1);
+        int pos = myrandom::randomInt(0, unused_list.size() - 1);
         PDCrossing ans = unused_list[pos];            // 先拷贝其中的元素
         unused_list.erase(unused_list.begin() + pos); // 再对拷贝后的元素进行删除
         return ans;

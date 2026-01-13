@@ -27,15 +27,19 @@ int main(int argc, char** argv) {
 
     // 是否要输出一个图
     bool show_diagram = false;
+    bool with_zero = false;
     for(int i = 0; i < args.size(); i += 1) {
         if(args[i] == "--diagram" || args[i] == "-d") {
             show_diagram = true;
+        }
+        if(args[i] == "--with_zero" || args[i] == "-z") {
+            with_zero = true;
         }
     }
 
     // 设置随机种子
     unsigned int seed = 42;
-    random::setSeed(seed);
+    myrandom::setSeed(seed);
 
     if(DEBUG) std::cout << "input pd_code ..." << std::endl;
     PDCode pd_code;
@@ -61,7 +65,7 @@ int main(int argc, char** argv) {
     if(DEBUG) std::cout << "running link algo ..." << std::endl;
     LinkAlgo link_algo(pd_code.getCrossingNumber(), s_info, component_cnt);
     if(show_diagram) {
-        link_algo.getFinalGraph().debugOutput(); // 输出二维布局图
+        link_algo.getFinalGraph().debugOutput(with_zero); // 输出二维布局图
     }
 
     if(DEBUG) std::cout << "output ans ..." << std::endl;

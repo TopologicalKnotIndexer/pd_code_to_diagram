@@ -28,6 +28,12 @@ pdcode_to_diagram.exe <pdcode.txt
 pdcode_to_diagram.exe --diagram <pdcode.txt
 ```
 
+3. 在带 `--diagram` 或者 `-d` 的基础上，使用 `--with_zero` 或者 `-z` 参数可以让布局图中使用 `0` 填补空位。
+```bash
+pdcode_to_diagram.exe --diagram --with_zero <pdcode.txt
+```
+注：在没有 `--diagram` 以及 `-d` 的前提下，使用 `--with_zero` 或者 `-z` 不会对程序产生影响。
+
 ### 从标准输入读入扭结
 
 如果您试图从标准输入读入扭结，请注意您需要为标准输入引入 EOF，具体而言：
