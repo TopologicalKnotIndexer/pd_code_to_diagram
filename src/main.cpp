@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
     if(DEBUG) std::cout << "running link algo ..." << std::endl;
     LinkAlgo link_algo(pd_code.getCrossingNumber(), s_info, component_cnt);
     if(show_diagram) {
-        link_algo.getFinalGraph().debugOutput(with_zero); // 输出二维布局图
+        link_algo.getFinalGraph().debugOutput(std::cout, with_zero); // 输出二维布局图
     }
 
     if(DEBUG) std::cout << "output ans ..." << std::endl;

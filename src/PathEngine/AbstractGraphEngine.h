@@ -48,7 +48,7 @@ public:
     }
 
     // 输出一个值域矩阵
-    virtual void debugOutput(bool with_zero) const {
+    virtual void debugOutput(std::ostream& out, bool with_zero) const {
         int xmin, xmax, ymin, ymax;
         std::tie(xmin, xmax, ymin, ymax) = getBorderCoord();
         xmin -= 1; // 拓宽边界
@@ -64,11 +64,11 @@ public:
                     if(with_zero) {
                         outputValue(0); // with_zero 模式下会输出边界的 0
                     }else {
-                        std::cout << "    ";
+                        out << "    ";
                     }
                 }
             }
-            std::cout << std::endl;
+            out << std::endl;
         }
     }
 };
