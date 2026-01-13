@@ -40,14 +40,16 @@ int main(int argc, char** argv) {
         if(args[i] == "--diagram" || args[i] == "-d") {
             show_diagram = true;
         }
-        if(args[i] == "--with_zero" || args[i] == "-z") {
+        else if(args[i] == "--with_zero" || args[i] == "-z") {
             with_zero = true;
         }
-        if(args[i] == "--serial" || args[i] == "-s") {
+        else if(args[i] == "--serial" || args[i] == "-s") {
             show_serial = true;
         }
-        if(args[i] == "--border" || args[i] == "-b") {
+        else if(args[i] == "--border" || args[i] == "-b") {
             show_border = true;
+        }else {
+            std::cerr << "warning: undefined command line argument: " + args[i] << std::endl;
         }
     }
 
