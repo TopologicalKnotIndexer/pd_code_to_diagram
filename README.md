@@ -20,7 +20,7 @@ g++ -std=c++17 -g -o pdcode_to_diagram.exe src/main.cpp
 
 1. 不带参数运行可以让程序输出三维空间坐标表示的扭结信息。
 ```bash
-pdcode_to_diagram.exe <pdcode.txt
+pdcode_to_diagram.exe --serial <pdcode.txt
 ```
 
 2. 带 `--diagram` 或者 `-d` 参数运行可以让程序输出一个直观的扭结在二维空间中的布局图。
@@ -33,6 +33,11 @@ pdcode_to_diagram.exe --diagram <pdcode.txt
 pdcode_to_diagram.exe --diagram --with_zero <pdcode.txt
 ```
 注：在没有 `--diagram` 以及 `-d` 的前提下，使用 `--with_zero` 或者 `-z` 不会对程序产生影响。
+
+4. 使用 `--border` 或者 `-b` 展示布局图中位于边界上的点。
+```bash
+pdcode_to_diagram.exe --border <pdcode.txt
+```
 
 ### 从标准输入读入扭结
 

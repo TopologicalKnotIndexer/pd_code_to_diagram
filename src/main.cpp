@@ -20,6 +20,8 @@
 #include "PDTreeAlgo/PDTree.h"
 #include "PDTreeAlgo/SocketInfo.h"
 
+#include "PathEngine/Common/GetBorderSet.h"
+
 #ifndef NO_MAIN // 如果 NO_MAIN 标志存在，则不编译 main 函数
 int main(int argc, char** argv) {
 
@@ -29,15 +31,23 @@ int main(int argc, char** argv) {
         args.push_back(std::string(argv[i]));
     }
 
-    // 是否要输出一个图
-    bool show_diagram = false;
-    bool with_zero = false;
+    
+    bool show_diagram = false; // 是否要输出一个图
+    bool show_serial  = false; // 输出一个 3D 序列化
+    bool with_zero    = false; // 输出图的时候是否要
+    bool show_border  = false; // 是否要输出边界信息（输出边界信息的话，就不会输出图或者序列化表示）
     for(int i = 0; i < args.size(); i += 1) {
         if(args[i] == "--diagram" || args[i] == "-d") {
             show_diagram = true;
         }
         if(args[i] == "--with_zero" || args[i] == "-z") {
             with_zero = true;
+        }
+        if(args[i] == "--serial" || args[i] == "-s") {
+            show_serial = true;
+        }
+        if(args[i] == "--border" || args[i] == "-b") {
+            show_border = true;
         }
     }
 
@@ -74,8 +84,14 @@ int main(int argc, char** argv) {
 
     if(DEBUG) std::cerr << "output ans ..." << std::endl;
     GenNodeSetAlgo gen_node_set_algo(link_algo.getFinalGraph(), link_algo.getAllEdges());
-    if(!show_diagram) {
+    if(show_serial) {
         gen_node_set_algo.outputGraph(std::cout); // 输出三维点坐标情况
+    }
+
+    if(show_border) { // 仅仅输出边界信息
+        auto im = link_algo.getFinalGraph().exportToIntMatrix();
+        GetBorderSet gbs(im);
+        gbs.debugOutput(std::cout); // 仅仅输出边界信息
     }
     return 0;
 }

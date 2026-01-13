@@ -5,13 +5,17 @@
 #include <iomanip>
 #include <iostream>
 
-class IntMatrix {
+#include "AbstractIntMatrix.h"
+
+class IntMatrix: public AbstractIntMatrix {
 private:
     std::vector<std::vector<int> > m_vec;
     const int m_row;
     const int m_col;
 
 public:
+    virtual ~IntMatrix() {} // 虚析构函数
+
     IntMatrix(int n, int m): m_row(n), m_col(m) {
         std::vector<int> one_line;
         for(int i = 0; i < m; i += 1) {
@@ -22,7 +26,7 @@ public:
         }
     }
 
-    int getPos(int i, int j) const {
+    virtual int getPos(int i, int j) const override {
         if(0 <= i && i < m_row && 0 <= j && j < m_col) {
             return m_vec[i][j];
         }else {
@@ -30,16 +34,16 @@ public:
         }
     }
 
-    void setPos(int i, int j, int v) {
+    virtual void setPos(int i, int j, int v) override {
         assert(0 <= i && i < m_row && 0 <= j && j < m_col);
         m_vec[i][j] = v;
     }
 
-    int getRowCnt() const {
+    virtual int getRowCnt() const override {
         return m_row;
     }
 
-    int getColCnt() const {
+    virtual int getColCnt() const override {
         return m_col;
     }
 
@@ -47,7 +51,7 @@ public:
         out << std::setw(3) << std::setfill(' ') << val << " ";
     }
 
-    void debugOutput(std::ostream& out, bool with_zero) const {
+    virtual void debugOutput(std::ostream& out, bool with_zero) const override {
         for(int i = 0; i < m_row; i += 1) {
             for(int j = 0; j < m_col; j += 1) {
                 if(getPos(i, j) != 0) {
