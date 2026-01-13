@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <tuple>
 #include <vector>
+#include "../Common/IntMatrix.h"
 #include "../Common/LineData.h"
 
 // 抽象地图引擎
@@ -43,32 +44,25 @@ public:
         }
     }
 
-    virtual void outputValue(std::ostream& out, int val) const {
-        out << std::setw(3) << std::setfill(' ') << val << " ";
-    }
-
     // 输出一个值域矩阵
     virtual void debugOutput(std::ostream& out, bool with_zero) const {
+        exportToIntMatrix().debugOutput(out, with_zero);
+    }
+
+    virtual IntMatrix exportToIntMatrix() const {
         int xmin, xmax, ymin, ymax;
         std::tie(xmin, xmax, ymin, ymax) = getBorderCoord();
-        xmin -= 1; // 拓宽边界
+        xmin -= 1;
         xmax += 1;
         ymin -= 1;
         ymax += 1;
-
+        
+        IntMatrix ans(xmax - xmin + 1, ymax - ymin + 1);
         for(int i = xmin; i <= xmax; i += 1) {
             for(int j = ymin; j <= ymax; j += 1) {
-                if(getPos(i, j) != 0) {
-                    outputValue(out, getPos(i, j));
-                }else {
-                    if(with_zero) {
-                        outputValue(out, 0); // with_zero 模式下会输出边界的 0
-                    }else {
-                        out << "    ";
-                    }
-                }
+                ans.setPos(i - xmin, j - ymin, getPos(i, j));
             }
-            out << std::endl;
         }
+        return ans;
     }
 };
