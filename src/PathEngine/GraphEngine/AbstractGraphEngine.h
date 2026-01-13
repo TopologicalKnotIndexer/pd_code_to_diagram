@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <tuple>
 #include <vector>
-#include "LineData.h"
+#include "../Common/LineData.h"
 
 // 抽象地图引擎
 class AbstractGraphEngine {
@@ -43,8 +43,8 @@ public:
         }
     }
 
-    virtual void outputValue(int val) const {
-        std::cout << std::setw(3) << std::setfill(' ') << val << " ";
+    virtual void outputValue(std::ostream& out, int val) const {
+        out << std::setw(3) << std::setfill(' ') << val << " ";
     }
 
     // 输出一个值域矩阵
@@ -59,10 +59,10 @@ public:
         for(int i = xmin; i <= xmax; i += 1) {
             for(int j = ymin; j <= ymax; j += 1) {
                 if(getPos(i, j) != 0) {
-                    outputValue(getPos(i, j));
+                    outputValue(out, getPos(i, j));
                 }else {
                     if(with_zero) {
-                        outputValue(0); // with_zero 模式下会输出边界的 0
+                        outputValue(out, 0); // with_zero 模式下会输出边界的 0
                     }else {
                         out << "    ";
                     }

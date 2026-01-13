@@ -2,8 +2,9 @@
 
 #include <algorithm>
 #include <iostream>
+#include <set>
 #include <vector>
-#include "AbstractGraphEngine.h"
+#include "../GraphEngine/AbstractGraphEngine.h"
 
 class SpanGraphEngineWrap: public AbstractGraphEngine {
 private:

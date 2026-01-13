@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "AbstractGraphEngine.h"
+#include "../GraphEngine/AbstractGraphEngine.h"
 
 // MarginGraphEngineWrap 的用途是为一个地图提供边界
 // 边界外的地方都被视为同一个值

@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "NodeSet3D.h"
-#include "../PathEngine/AbstractGraphEngine.h"
+#include "../PathEngine/GraphEngine/AbstractGraphEngine.h"
 
 class GenNodeSetAlgo {
 private:

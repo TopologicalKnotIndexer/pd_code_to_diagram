@@ -1,8 +1,8 @@
 #pragma once
 
 #include <vector>
-#include "AbstractGraphEngine.h"
-#include "LineData.h"
+#include "../GraphEngine/AbstractGraphEngine.h"
+#include "../Common/LineData.h"
 
 class AbstractPathAlgorithm {
 public:

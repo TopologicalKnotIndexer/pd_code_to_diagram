@@ -4,13 +4,13 @@
 #include <cassert>
 #include <tuple>
 
-#include "PathEngine/VectorGraphEngine.h"
-#include "PathEngine/ErasePointGraphEngineWrap.h"
-#include "PathEngine/MergeGraphEngineWrap.h"
-#include "PathEngine/PixelGraphEngine.h"
+#include "PathEngine/GraphEngine/VectorGraphEngine.h"
+#include "PathEngine/GraphEngine/PixelGraphEngine.h"
+#include "PathEngine/GraphEngineWrap/ErasePointGraphEngineWrap.h"
+#include "PathEngine/GraphEngineWrap/MergeGraphEngineWrap.h"
+#include "PathEngine/GraphEngineWrap/SpanGraphEngineWrap.h"
+#include "PathEngine/PathAlgorithm/SpfaPathEngine.h"
 #include "PDTreeAlgo/SocketInfo.h"
-#include "PathEngine/SpanGraphEngineWrap.h"
-#include "PathEngine/SpfaPathEngine.h"
 #include "Utils/Coord2dPosition.h"
 
 template<typename T>

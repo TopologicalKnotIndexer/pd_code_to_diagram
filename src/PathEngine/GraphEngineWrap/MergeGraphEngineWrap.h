@@ -1,7 +1,8 @@
 #pragma once
 
 #include <iostream>
-#include "AbstractGraphEngine.h"
+#include <set>
+#include "../GraphEngine/AbstractGraphEngine.h"
 
 // MergeGraphEngineWrap 用于合并两个抽象图引擎
 // 但是他合并后得到的抽象图引擎并不允许修改

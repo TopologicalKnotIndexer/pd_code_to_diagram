@@ -6,7 +6,7 @@
 
 #include "../Utils/Debug.h"
 #include "../Utils/Direction.h"
-#include "../PathEngine/VectorGraphEngine.h"
+#include "../PathEngine/GraphEngine/VectorGraphEngine.h"
 
 class SocketInfo {
 private:

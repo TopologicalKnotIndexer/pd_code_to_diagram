@@ -6,7 +6,7 @@
 #include <tuple>
 
 #include "AbstractGraphEngine.h"
-#include "LineData.h"
+#include "../Common/LineData.h"
 
 class PixelGraphEngine: public AbstractGraphEngine {
 private:

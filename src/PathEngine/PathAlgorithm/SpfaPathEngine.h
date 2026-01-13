@@ -9,12 +9,12 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "../Utils/Direction.h"
-#include "../Utils/Coord2dPosition.h" // 这里有方向和坐标位移的对应关系
+#include "../../Utils/Direction.h"
+#include "../../Utils/Coord2dPosition.h" // 这里有方向和坐标位移的对应关系
 
-#include "AbstractGraphEngine.h"
 #include "AbstractPathAlgorithm.h"
-#include "MarginGraphEngineWrap.h"
+#include "../GraphEngine/AbstractGraphEngine.h"
+#include "../GraphEngineWrap/MarginGraphEngineWrap.h"
 
 // 为元组类型提供哈希函数，以方便使用 unordered_map 和 unordered_set
 namespace std {

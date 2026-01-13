@@ -5,9 +5,10 @@
 #include <vector>
 
 #include "AbstractGraphEngine.h"
-#include "Coord2dSet.h"
-#include "LineData.h"
 #include "PixelGraphEngine.h"
+
+#include "../Common/Coord2dSet.h"
+#include "../Common/LineData.h"
 
 class VectorGraphEngine: public AbstractGraphEngine {
 private:
