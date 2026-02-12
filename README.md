@@ -18,7 +18,7 @@ g++ -std=c++17 -g -o pdcode_to_diagram.exe src/main.cpp
 
 然后运行编译得到的程序。
 
-1. 不带参数运行可以让程序输出三维空间坐标表示的扭结信息。
+1. 带参数 `--serial` 或 `-s` 运行可以让程序输出三维空间坐标表示的扭结信息。
 ```bash
 pdcode_to_diagram.exe --serial <pdcode.txt
 ```
