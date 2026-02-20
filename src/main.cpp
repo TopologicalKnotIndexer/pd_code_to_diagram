@@ -17,12 +17,12 @@
 #include <string>
 #include <vector>
 
+#include "BorderDetect/BorderDetect.h"
 #include "LinkAlgo.h"
 #include "NodeSet3D/GenNodeSetAlgo.h"
 #include "PDTreeAlgo/PDCode.h"
 #include "PDTreeAlgo/PDTree.h"
 #include "PDTreeAlgo/SocketInfo.h"
-
 #include "PathEngine/Common/GetBorderSet.h"
 
 // 安全获取stringstream全部内容且不改变其状态的函数
@@ -100,18 +100,24 @@ void try_once(unsigned int seed, std::stringstream& ss, bool show_diagram, bool 
 
     if(DEBUG) std::cerr << "running link algo ..." << std::endl;
     LinkAlgo link_algo(pd_code.getCrossingNumber(), s_info, component_cnt);
-    if(show_diagram) {
-        link_algo.getFinalGraph().debugOutput(std::cout, with_zero); // 输出二维布局图
-    }
+    auto im = link_algo.getFinalGraph().exportToIntMatrix();
+
+    // 检查最大编号所在的连通分支是否在最外圈
+    auto detector = BorderDetect();
+    ASSERT(detector.checkBorderMaxCC(im.toIntMatrix2()));
 
     if(DEBUG) std::cerr << "output ans ..." << std::endl;
     GenNodeSetAlgo gen_node_set_algo(link_algo.getFinalGraph(), link_algo.getAllEdges());
+    
+    if(show_diagram) {
+        im.debugOutput(std::cout, with_zero); // 输出二维布局图
+    }
+    
     if(show_serial) {
         gen_node_set_algo.outputGraph(std::cout); // 输出三维点坐标情况
     }
 
     if(show_border) { // 仅仅输出边界信息
-        auto im = link_algo.getFinalGraph().exportToIntMatrix();
         GetBorderSet gbs(im);
         gbs.debugOutput(std::cout); // 仅仅输出边界信息
     }
@@ -149,9 +155,11 @@ int main(int argc, char** argv) {
 
     // read in all content
     auto ss = readCinToStringStream();
+    int max_try = 100;
 
     bool fail = true;
-    for(unsigned int seed = 42; seed <= 42 + 10; seed += 1) {
+    bool suc = false;
+    for(unsigned int seed = 42; seed <= 42 + max_try; seed += 1) {
         try{
             ss.clear(); // 清除可能的 eofbit
             ss.seekg(0, std::ios::beg);
@@ -163,6 +171,7 @@ int main(int argc, char** argv) {
 
             try_once(seed, ss, show_diagram, show_serial, with_zero, show_border);
             fail = false; // 没有失败
+            suc = true;   // 成功了
         }catch(const std::runtime_error& re){ // 截获异常，失败
             fail = true;
             if(DEBUG) {
@@ -174,6 +183,14 @@ int main(int argc, char** argv) {
             break;
         }
     }
+
+    // 如果没有成功，则抛出异常
+    if(!suc) { 
+        if(DEBUG) {
+            std::cerr << "failed after " << max_try << " try." << std::endl;
+        }
+    }
+    ASSERT(suc);
     return 0;
 }
 #endif

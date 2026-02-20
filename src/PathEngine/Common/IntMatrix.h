@@ -6,6 +6,7 @@
 
 #include "AbstractIntMatrix.h"
 #include "../../Utils/MyAssert.h"
+#include "../../BorderDetect/IntMatrix2/IntMatrix2.h"
 
 class IntMatrix: public AbstractIntMatrix {
 private:
@@ -24,6 +25,16 @@ public:
         for(int i = 0; i < n; i += 1) {
             m_vec.push_back(one_line); // 拷贝构造
         }
+    }
+
+    IntMatrix2 toIntMatrix2() const {
+        IntMatrix2 ans(m_row, m_col);
+        for(int i = 0; i < m_row; i += 1) {
+            for(int j = 0; j < m_col; j += 1) {
+                ans.setPos(i, j, getPos(i, j));
+            }
+        }
+        return ans;
     }
 
     virtual int getPos(int i, int j) const override {

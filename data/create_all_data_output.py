@@ -12,6 +12,7 @@ def is_windows_by_sys() -> bool:
 import os
 import subprocess
 DIRNOW = os.path.dirname(os.path.abspath(__file__))
+A_EXE = os.path.join(DIRNOW, "..", "bin", "a.exe")
 
 PD_CODE      = os.path.join(DIRNOW, "pd_code")
 COORD3D      = os.path.join(DIRNOW, "coord3d")
@@ -52,29 +53,56 @@ def run_with_redirect(cmd:list[str], stdin_path=None, stdout_path=None, encoding
         for f in redirect_kwargs.values():
             f.close()
 
+def crossing_num(knotname:str) -> int:
+    return int(knotname.lower().split("l")[-1].split("a")[0].split("n")[0])
+
+def knot_type(knotname:str) -> str:
+    if knotname.find("a") != -1:
+        return "a"
+    else:
+        return "n"
+
+def knot_inner_index(knotname:str) -> int:
+    if knotname.endswith(".txt"):
+        knotname = knotname[:-4]
+    return int(knotname.split("a")[-1].split("n")[-1])
+
+def sorted_knot_name(knot_list:list[str]) -> list[str]:
+    return sorted(knot_list, key=lambda knotname: (
+        crossing_num(knotname), knot_type(knotname), knot_inner_index(knotname)))
+
+def process_all_file(pre:list, perfile:list, after:list):
+    for item in pre:
+        item()
+    
+    knot_name_list = sorted_knot_name(list(os.listdir(PD_CODE)))
+    for idx, filename in enumerate(knot_name_list):
+        inp_filepath = os.path.join(PD_CODE, filename)
+        for func in perfile:
+            func(inp_filepath, idx, len(knot_name_list))
+    for item in after:
+        item()
+
+def output_template(aim_dir:str, cmd:list[str]):
+    process_all_file([
+        lambda: os.makedirs(aim_dir, exist_ok=True)
+    ], [
+        lambda x, idx, total: print((idx + 1), "/", total, os.path.basename(x)),
+        lambda x, idx, total: (run_with_redirect([A_EXE] + cmd, 
+                                     x, os.path.join(aim_dir, os.path.basename(x))))
+    ], [])
+
 # 输出所有三维结构
 def create_all_coord3d():
-    for filename in os.listdir(PD_CODE):
-        print(filename)
-        inp_filepath  = os.path.join(PD_CODE, filename)
-        out_filepath = os.path.join(COORD3D, filename)
-        run_with_redirect([os.path.join(DIRNOW, "..", "bin", "a.exe"), "-s"], inp_filepath, out_filepath)
+    output_template(COORD3D, ["-s"])
 
 # 输出所有二维图
 def create_all_diagram():
-    for filename in os.listdir(PD_CODE):
-        print(filename)
-        inp_filepath  = os.path.join(PD_CODE, filename)
-        out_filepath = os.path.join(DIAGRAM, filename)
-        run_with_redirect([os.path.join(DIRNOW, "..", "bin", "a.exe"), "-d"], inp_filepath, out_filepath)
+    output_template(DIAGRAM, ["-d"])
 
 # 输出所有带 0 二维图
 def create_all_diagram_zero():
-    for filename in os.listdir(PD_CODE):
-        print(filename)
-        inp_filepath  = os.path.join(PD_CODE, filename)
-        out_filepath = os.path.join(DIAGRAM_ZERO, filename)
-        run_with_redirect([os.path.join(DIRNOW, "..", "bin", "a.exe"), "-d", "-z"], inp_filepath, out_filepath)
+    output_template(DIAGRAM_ZERO, ["-d", "-z"])
 
 if __name__ == "__main__":
     create_all_diagram_zero()
