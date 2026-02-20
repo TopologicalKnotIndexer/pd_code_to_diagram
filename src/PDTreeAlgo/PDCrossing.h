@@ -1,10 +1,10 @@
 #pragma once
 
-#include <cassert>
 #include <string>
 #include <vector>
 
 #include "../Utils/Direction.h"
+#include "../Utils/MyAssert.h"
 
 // 在 PDCode 中
 // 用于描述一个交叉点的信息
@@ -18,17 +18,17 @@ public:
         this -> crs = crs;
 
         // 如果加载得到的 vector 不是四元组，则报错
-        assert(crs.size() == 4);
+        ASSERT(crs.size() == 4);
     }
 
     // 检查当前对象是否正常，如果当前对象异常则 assert 报错
     void sanityCheck() const {
 
         // 如果 crs.size() 为零，说明这个对象尚未初始化
-        assert(crs.size() != 0);
+        ASSERT(crs.size() != 0);
 
         // 如果 crs.size() 不为零，但是也不等于 4，说明当前 crossing 的信息出现了错误
-        assert(crs.size() == 4);
+        ASSERT(crs.size() == 4);
     }
 
     // 检查当前交叉点是否含有某个指定的 socket 编号
@@ -68,7 +68,7 @@ public:
     int getSocketIdByDirection(Direction base, Direction aim) const {
 
         int delta_dir = ((4 + (int)aim - (int)base) % 4);
-        assert(0 <= delta_dir && delta_dir < 4);
+        ASSERT(0 <= delta_dir && delta_dir < 4);
         return crs[delta_dir];
     }
 
@@ -76,7 +76,7 @@ public:
     // 其次，这个函数可以计算出
     // 为了让 socket_id 朝向 aim_dir，需要将 base_dir 设为什么
     Direction baseShift(int socket_id, Direction aim_dir) const {
-        assert(hasSocket(socket_id));
+        ASSERT(hasSocket(socket_id));
 
         int pos = -1;
         for(int i = 0; i < 4; i += 1) { // 找到 socket_id 第一次出现的位置

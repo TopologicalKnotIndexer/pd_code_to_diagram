@@ -7,6 +7,7 @@
 
 #include "IntMatrix.h"
 #include "AbstractIntMatrix.h"
+#include "../../Utils/MyAssert.h"
 
 class GetBorderSet {
 private:
@@ -31,7 +32,7 @@ public:
 
         vis.setPos(0, 0, 1); // 记录已经访问过了
         que.push(std::make_tuple(0, 0));
-        assert(aim.getPos(0, 0) == 0); // 左上角的位置必须是零，因为我们要求有一圈零边界
+        ASSERT(aim.getPos(0, 0) == 0); // 左上角的位置必须是零，因为我们要求有一圈零边界
 
         // 位移矩阵
         static const int dx[] = {0, 0, 1,-1};

@@ -1,3 +1,14 @@
+import sys
+
+def is_windows_by_sys() -> bool:
+    """
+    通过 sys 模块判断当前系统是否为 Windows
+    返回值：
+        bool - True 表示是 Windows 系统，False 表示不是
+    """
+    # sys.platform 在 Windows 系统上返回 'win32'（无论 32/64 位）
+    return sys.platform.startswith('win')
+
 import os
 import subprocess
 DIRNOW = os.path.dirname(os.path.abspath(__file__))
@@ -6,8 +17,6 @@ PD_CODE      = os.path.join(DIRNOW, "pd_code")
 COORD3D      = os.path.join(DIRNOW, "coord3d")
 DIAGRAM      = os.path.join(DIRNOW, "diagram")
 DIAGRAM_ZERO = os.path.join(DIRNOW, "diagram_0")
-assert os.path.isdir(PD_CODE)
-assert os.path.isdir(COORD3D)
 
 def run_with_redirect(cmd:list[str], stdin_path=None, stdout_path=None, encoding="utf-8"):
     """
@@ -33,7 +42,7 @@ def run_with_redirect(cmd:list[str], stdin_path=None, stdout_path=None, encoding
         # cmd 传列表时，shell=True 不影响 Linux，仅适配 Windows
         result = subprocess.run(
             cmd,
-            shell=True,  # 关键：兼容 Windows 的 cmd 命令（如 dir）和 Linux 的 shell 命令
+            shell=not is_windows_by_sys(),  # 关键：兼容 Windows 的 cmd 命令（如 dir）和 Linux 的 shell 命令
             encoding=encoding,
             **redirect_kwargs
         )

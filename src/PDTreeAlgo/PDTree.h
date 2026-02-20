@@ -1,13 +1,13 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 #include <iostream>
 #include <set>
 #include <vector>
 
 #include "../Utils/Coord2dPosition.h"
 #include "../Utils/Direction.h"
+#include "../Utils/MyAssert.h"
 #include "../Utils/Random.h"
 
 #include "PDCrossing.h"
@@ -60,7 +60,7 @@ private:
 
     // 从一个 vector 中随机删除一个元素，并返回
     PDCrossing popRandomCrossing(std::vector<PDCrossing>& unused_list) {
-        assert(unused_list.size() != 0);
+        ASSERT(unused_list.size() != 0);
 
         int pos = myrandom::randomInt(0, unused_list.size() - 1);
         PDCrossing ans = unused_list[pos];            // 先拷贝其中的元素
@@ -72,7 +72,7 @@ private:
     // 找到 unused_list 中第一次出现这个 socket_id 的位置
     // 并删除它
     PDCrossing popCrossingBySocketId(std::vector<PDCrossing>& unused_list, int socket_id) {
-        assert(unused_list.size() != 0);
+        ASSERT(unused_list.size() != 0);
 
         int pos = -1;
         for(int i = 0; i < unused_list.size(); i += 1) {
@@ -83,7 +83,7 @@ private:
         }
 
         // 如果没有找到，直接报错（理论上 dfs 对 map 正确去重的前提下一定能找到）
-        assert(pos != -1);
+        ASSERT(pos != -1);
 
         // 先记录这个元素值，再从 list 中删去
         PDCrossing ans = unused_list[pos];
@@ -102,21 +102,38 @@ private:
         double right = 0;
     };
 
+    double getPositionPunish() const {
+        const auto N = (pd_code.getCrossingNumber() + 1);
+        return N * N * N;
+    }
+
     // 观察当前是否已经有节点占据了 new_pos 这个位置
     // 如果有则返回一个较大的惩罚
     // 如果没有则返回 0
     double calcPositionPunish(Coord2dPosition new_pos) const {
-        const auto N = (pd_code.getCrossingNumber() + 1);
 
         // 这里需要跳过零号节点，因为零号节点并不是真正意义上的节点
         for(int i = 1; i < structure.size(); i += 1) {
             if(Coord2dPosition::same(structure[i].pos2d, new_pos)) {
-                return N * N;
+                return getPositionPunish();
             }
         }
 
         // 没有找到重合的节点
         return 0;
+    }
+
+    // 根据编号大小对 socket 使用顺序进行惩罚
+    // 这里应该让最大编号所在的联通分支增加一个惩罚
+    double calcSocketIdPunish(int socket_id, const std::set<int>& max_socket_component) const {
+        const auto N = (pd_code.getCrossingNumber() + 1);
+
+        // 对最大编号所在的联通分支进行惩罚
+        if(max_socket_component.find(socket_id) != max_socket_component.end()) {
+            return N;
+        }else {
+            return 0;
+        }
     }
 
     // 观察当前是否有一个存在的节点到 new_pos 的距离小于等于 1
@@ -145,7 +162,8 @@ private:
     // 遍历整颗树
     // leaf_id_map 将记录一些关于树上空闲插头的信息
     // 具体参考 getBestSocket 函数前的注释
-    void dfs(int x, int fa, std::map<int, LeafInfo>& leaf_id_map) {
+    // max_socket_id 是插头的最大编号
+    void dfs(int x, int fa, std::map<int, LeafInfo>& leaf_id_map, const std::set<int>& max_socket_component) {
         for(int i = 0; i < 4; i += 1) {
             if(structure[x].next_node[i] == fa) { // 避免对父节点进行递归
                 continue;
@@ -157,7 +175,7 @@ private:
                 if(leaf_id_map.find(socket_id) != leaf_id_map.end()) {
                     
                     // 说明这个 socket_id 过去曾经出现过
-                    // 删除过去出现的记录
+                    // 删除过去出现的记录 (两个插头已经匹配)
                     leaf_id_map.erase(leaf_id_map.lower_bound(socket_id));
                 }else {
 
@@ -186,12 +204,13 @@ private:
                                 structure[x].pos2d.unit(),
                                 Coord2dPosition::getDeltaPositionByDirection((Direction)i)) * 0.5
                             - calcPositionPunish(new_pos)
-                            - calcNearPunish(x, new_pos))
+                            - calcNearPunish(x, new_pos)
+                            - calcSocketIdPunish(socket_id, max_socket_component))
                     };
                 }
 
             }else { // 说明这不是一个空闲插头
-                dfs(structure[x].next_node[i], x, leaf_id_map);
+                dfs(structure[x].next_node[i], x, leaf_id_map, max_socket_component);
             }
         }
     }
@@ -208,8 +227,8 @@ private:
     // 2. 这个 socket 对应的编号，目前在树上恰出现一次
     // 3. 如果有多个可用的，优先选择 right 最大的 socket
     LeafInfo getBestSocket(int root, const std::map<int, LeafInfo>& leaf_id_map) {
-        assert(root >= 0);
-        assert(leaf_id_map.size() > 0);
+        ASSERT(root >= 0);
+        ASSERT(leaf_id_map.size() > 0);
 
         // 对 leaf_id_map 序列化，以便于排序取一个元素出来
         std::vector<LeafInfo> leaf_id_list;
@@ -222,17 +241,17 @@ private:
         return leaf_id_list[0];
     }
 
-    std::tuple<bool, std::map<int, LeafInfo>> checkGetSocket(int root) {
+    std::tuple<bool, std::map<int, LeafInfo>> checkGetSocket(int root, const std::set<int>& max_socket_component) {
         if(root <= -1) {
             return std::make_tuple(false, std::map<int, LeafInfo>());
         }
-        assert(root >= 0);
+        ASSERT(root >= 0);
 
         // leaf_id_map 第一次遇到某个 socket_id 时
         // leaf_id_map[socket_id] 赋值为这个 socket 的 LeafInfo
         // 第二次遇到同样的 socket_id 时，在 leaf_id_map 上删除 leaf_id_map[socket_id]
         std::map<int, LeafInfo> leaf_id_map;
-        dfs(root, -1, leaf_id_map); // 这里的 fa 如果设为 0 会导致错误跳过一些分支
+        dfs(root, -1, leaf_id_map, max_socket_component); // 这里的 fa 如果设为 0 会导致错误跳过一些分支
 
         // 如果没有空闲的插头，说明树已经建完，不可以再调用 getBestSocket
         return std::make_tuple(leaf_id_map.size() > 0, leaf_id_map);
@@ -242,7 +261,12 @@ private:
     void buildTree() {
         // 预先保存所有交叉点数
         const int n = pd_code.getCrossingNumber();
-        assert(n != 0);
+        const int max_socket_id = 2 * n;
+
+        // 获得最大编号所在的联通分支
+        // 让最大编号所在的联通分支最后拓展
+        auto max_socket_component = pd_code.getComponent(max_socket_id);
+        ASSERT(n != 0);
 
         // 记录所有还没有被使用过的交叉点
         std::vector<PDCrossing> unused;
@@ -255,7 +279,11 @@ private:
 
         // 如果还有没有放到树上的节点，则运行下面的循环
         while(unused.size() > 0) {
-            auto pr = checkGetSocket(root);
+
+            // checkGetSocket 的功能：
+            // 1. 判断 root 目前是否是合法的树，如果是空树，则 std::get<0>(pr) 为 false
+            // 2. 在 std::get<1>(pr) 中给出当前树上的所有可用 socket 算法为 dfs
+            auto pr = checkGetSocket(root, max_socket_component);
             if(!std::get<0>(pr)) {
                 // 先随机选择一个节点，用于生成根节点
                 // 根节点默认 base 方向朝向正东方向，并且坐标放置在原点处
@@ -268,7 +296,11 @@ private:
             }else {
 
                 // 选择一个最优 socket_id 进行拓展
+                // std::get<1>(pr) 中给出了当前树拓展所能使用的所有 socket
                 LeafInfo leaf_info = getBestSocket(root, std::get<1>(pr));
+
+                // 如果以下条件不成立，我们认为已经出现了重合位置
+                ASSERT(leaf_info.right >= - 0.5 * getPositionPunish());
 
                 // 在 unused 序列中找到第一次出现这个 socket_id 的 crossing
                 // 根据这个 crossing 的信息新建一个节点 
@@ -304,7 +336,7 @@ private:
 public:
 
     int getComponentCnt() const {
-        assert(pd_code.getCrossingNumber() >= 1);
+        ASSERT(pd_code.getCrossingNumber() >= 1);
         return component_cnt;
     }
     
@@ -317,7 +349,7 @@ public:
         // 保证零号节点总是存在的
         // 因为零号节点用于表示空的 socket，而最小节点编号为 1
         int zero = newTreeNode();
-        assert(zero == 0);
+        ASSERT(zero == 0);
     }
 
     // 加载一个 pd_code 并计算生成树
@@ -325,7 +357,7 @@ public:
         clear(); // 清除历史数据
 
         pd_code = new_pd_code;
-        assert(pd_code.getCrossingNumber() != 0);
+        ASSERT(pd_code.getCrossingNumber() != 0);
 
         buildTree(); // 构建树
     }
@@ -334,7 +366,7 @@ public:
     // 1. 要求已经完成了建树
     // 2. 是否有不同的节点被放置在的相同的坐标点上
     bool checkNoOverlay() const {
-        assert(pd_code.getCrossingNumber() > 0); // 必须完成了建树
+        ASSERT(pd_code.getCrossingNumber() > 0); // 必须完成了建树
 
         // 记录所有出现过的点坐标
         std::set<std::tuple<int, int>> coord2d_set;
@@ -350,7 +382,7 @@ public:
 
     // 能够通过 SocketInfo 推出其他重要信息
     SocketInfo getSocketInfo() {
-        assert(pd_code.getCrossingNumber() > 0); // 必须完成了建树
+        ASSERT(pd_code.getCrossingNumber() > 0); // 必须完成了建树
         SocketInfo socket_info;
 
         // 先保存所有 socket 的使用状态

@@ -1,5 +1,6 @@
 #pragma once
-#include <cassert>
+
+#include "../../Utils/MyAssert.h"
 
 class LineData
 {
@@ -8,7 +9,7 @@ private:
 
 public:
     LineData(int _xf, int _xt, int _yf, int _yt, int _v) {
-        assert(_xf == _xt || _yf == _yt);
+        ASSERT(_xf == _xt || _yf == _yt);
         xf = _xf;
         xt = _xt;
         yf = _yf;

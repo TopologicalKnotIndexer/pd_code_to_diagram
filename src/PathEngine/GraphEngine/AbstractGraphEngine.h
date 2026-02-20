@@ -5,6 +5,7 @@
 #include <vector>
 #include "../Common/IntMatrix.h"
 #include "../Common/LineData.h"
+#include "../../Utils/MyAssert.h"
 
 // 抽象地图引擎
 class AbstractGraphEngine {
@@ -32,7 +33,7 @@ public:
         int yf = lineData.getYf();
         int yt = lineData.getYt();
         int  v = lineData.getV ();
-        assert(xf == xt || yf == yt);
+        ASSERT(xf == xt || yf == yt);
         if(xf == xt) {
             for(int i = std::min(yf, yt); i <= std::max(yf, yt); i += 1) {
                 setPos(xf, i, v);

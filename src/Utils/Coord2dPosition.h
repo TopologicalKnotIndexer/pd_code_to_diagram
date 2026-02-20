@@ -1,9 +1,9 @@
 #pragma once
 
 #include <cmath>
-#include <cassert>
 
 #include "Direction.h"
+#include "MyAssert.h"
 
 // 描述坐标所使用的数据类型
 using Coord2dType = double;
@@ -66,7 +66,7 @@ public:
         
         // 遇到了未定义的方向则报错
         }else {
-            assert(false);
+            ASSERT(false);
         }
     }
 

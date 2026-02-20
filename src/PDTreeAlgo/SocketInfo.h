@@ -1,11 +1,11 @@
 #pragma once
 
-#include <cassert>
 #include <map>
 #include <vector>
 
 #include "../Utils/Debug.h"
 #include "../Utils/Direction.h"
+#include "../Utils/MyAssert.h"
 #include "../PathEngine/GraphEngine/VectorGraphEngine.h"
 
 class SocketInfo {
@@ -31,13 +31,13 @@ public:
 
     // 记录 base 方向
     void setBaseDirection(int x, int y, Direction d) {
-        assert(checked == false);
+        ASSERT(checked == false);
         crossing_base_direction[std::make_tuple(x, y)] = d;
     }
 
     // 获取 base 方向
     Direction getBaseDirection(int x, int y) const {
-        assert(crossing_base_direction.find(std::make_tuple(x, y)) != crossing_base_direction.end());
+        ASSERT(crossing_base_direction.find(std::make_tuple(x, y)) != crossing_base_direction.end());
         return crossing_base_direction.find(std::make_tuple(x, y)) -> second;
     }
 
@@ -68,7 +68,7 @@ public:
 
     // 新增一个信息
     void addInfo(int socket_id, int x, int y, Direction d) {
-        assert(checked == false); // 完成检查之后不再允许新增信息
+        ASSERT(checked == false); // 完成检查之后不再允许新增信息
         socket_info[socket_id].push_back(std::make_tuple(x, y, d));
     }
 
@@ -83,7 +83,7 @@ public:
 
     // 获取一个 socket 的位置和方向信息
     std::vector<std::tuple<int, int, Direction>> getInfo(int socket_id) {
-        assert(socket_info[socket_id].size() == 2);
+        ASSERT(socket_info[socket_id].size() == 2);
         return socket_info[socket_id];
     }
 
@@ -98,24 +98,23 @@ public:
                 used_cnt += 1;
             }
             if(socket_info[i].size() != 2) { // 在运行 check 函数的时候
-                assert(false);
+                ASSERT(false);
             }
             int x1, y1; Direction d1; std::tie(x1, y1, d1) = socket_info[i][0];
             int x2, y2; Direction d2; std::tie(x2, y2, d2) = socket_info[i][1];
 
             // 检查是否正确记录了方向信息
-            assert(crossing_base_direction.find(std::make_tuple(x1, y1)) != crossing_base_direction.end());
-            assert(crossing_base_direction.find(std::make_tuple(x2, y2)) != crossing_base_direction.end());
+            ASSERT(crossing_base_direction.find(std::make_tuple(x1, y1)) != crossing_base_direction.end());
+            ASSERT(crossing_base_direction.find(std::make_tuple(x2, y2)) != crossing_base_direction.end());
         }
-        if(used_cnt != n - component_cnt) { // 由于是一个有 n 个节点的树，所以当时恰好使用了 n - 1 条边
-            assert(false);
-        }
+        // 由于是一个有 n 个节点的树，所以当时恰好使用了 n - 1 条边
+        ASSERT(used_cnt == n - component_cnt);
         checked = true;
     }
 
     // 需要能够重新调整所有坐标
     void commitCoordMap(Coord2dSet& coord2d_set, int k) {
-        assert(checked == true);
+        ASSERT(checked == true);
 
         SocketInfo new_socket_info;
         new_socket_info.socket_used = socket_used; // 直接拷贝 “使用否” 矩阵
@@ -156,12 +155,12 @@ public:
         // 使用默认拷贝构造，一次性成型
         new_socket_info.checked = true;
         *this = new_socket_info;
-        assert(checked == true);
+        ASSERT(checked == true);
     }
 
     // 获取得到所有树边对应的 VGE
     VectorGraphEngine getTreeEdgeVGE() const {
-        assert(checked == true);
+        ASSERT(checked == true);
         VectorGraphEngine vge;
 
         for(auto idx: socket_used) {
@@ -182,7 +181,7 @@ public:
 
     // 获取得到所有交叉点坐标对应的 VGE
     VectorGraphEngine getCrossingVGE() const {
-        assert(checked == true);
+        ASSERT(checked == true);
         std::set<std::tuple<int, int>> coord2d_set; // 用于给所有点坐标去重
 
         for(const auto& socket_info_pair: socket_info) {

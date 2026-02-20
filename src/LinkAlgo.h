@@ -1,7 +1,6 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 #include <tuple>
 
 #include "PathEngine/GraphEngine/VectorGraphEngine.h"
@@ -12,6 +11,7 @@
 #include "PathEngine/PathAlgorithm/SpfaPathEngine.h"
 #include "PDTreeAlgo/SocketInfo.h"
 #include "Utils/Coord2dPosition.h"
+#include "Utils/MyAssert.h"
 
 template<typename T>
 void vecPushFront(std::vector<T>& vec, T&& value) {
@@ -54,7 +54,7 @@ private:
 
         // 确定起点终点，并将其设置为可行走的
         auto vec = socket_info.getInfo(socket_id);
-        assert(vec.size() == 2);
+        ASSERT(vec.size() == 2);
         for(auto pos: vec) { // 设置 epgew 的四个禁用障碍点 (否则会被 SpanGraphEngineWrap 堵死)
             int xpos, ypos;
             Direction dir;
@@ -82,8 +82,8 @@ private:
         std::vector<LineData> path;
         if(x1 != x2 || y1 != y2) {
             auto pr = SpfaPathEngine().runAlgo(epgew, xmin, xmax, ymin, ymax, x1, y1, x2, y2);
-            assert(std::get<0>(pr) != -1.0);     // 如果这里条件不成立，说明原来的图不是平面图
-            assert(std::get<1>(pr).size() != 0); // 如果这里条件不成立，说明原来的图不是平面图
+            ASSERT(std::get<0>(pr) != -1.0);     // 如果这里条件不成立，说明原来的图不是平面图
+            ASSERT(std::get<1>(pr).size() != 0); // 如果这里条件不成立，说明原来的图不是平面图
 
             auto dis  = std::get<0>(pr);
             path = std::get<1>(pr);
@@ -94,13 +94,13 @@ private:
             PixelGraphEngine single_point_graph;
             single_point_graph.setPos(x1, y1, -3); // 把中心点设置为障碍物
             MergeGraphEngineWrap nmgew(single_point_graph, epgew);
-            assert(nmgew.getPos(x1, y1) != 0);
+            ASSERT(nmgew.getPos(x1, y1) != 0);
 
             // 获取得到相应的起始点坐标
             int new_x1, new_y1; Direction new_d1; std::tie(new_x1, new_y1, new_d1) = vec[0];
             int new_x2, new_y2; Direction new_d2; std::tie(new_x2, new_y2, new_d2) = vec[1];
-            assert(new_x1 == x1 && new_y1 == y1);
-            assert(new_x2 == x2 && new_y2 == y2);
+            ASSERT(new_x1 == x1 && new_y1 == y1);
+            ASSERT(new_x2 == x2 && new_y2 == y2);
 
             // 获取位置偏移
             int dx1 = (int)round(Coord2dPosition::getDeltaPositionByDirection(new_d1).getX());
@@ -116,14 +116,14 @@ private:
 
             // 计算最短路
             auto pr = SpfaPathEngine().runAlgo(nmgew, xmin, xmax, ymin, ymax, new_x1, new_y1, new_x2, new_y2);
-            assert(std::get<0>(pr) != -1.0);     // 如果这里条件不成立，说明原来的图不是平面图
-            assert(std::get<1>(pr).size() != 0); // 如果这里条件不成立，说明原来的图不是平面图
+            ASSERT(std::get<0>(pr) != -1.0);     // 如果这里条件不成立，说明原来的图不是平面图
+            ASSERT(std::get<1>(pr).size() != 0); // 如果这里条件不成立，说明原来的图不是平面图
 
             auto dis  = std::get<0>(pr);
             path = std::get<1>(pr);
 
             // 重新设置起点和终点
-            assert(x1 == x2 && y1 == y2);
+            ASSERT(x1 == x2 && y1 == y2);
             vecPushFront(path, LineData(x1, path[0].getXf(), y1, path[0].getYf(), 0));
             path.push_back(LineData(path[path.size() - 1].getXt(), x1, path[path.size() - 1].getYt(), y1, 0));
         }
@@ -144,7 +144,7 @@ private:
     // 试图将最近的一组边放置到图上
     void buildOne() {
         auto unused_sokcet_id_list = socket_info.getAllUnusedId(crossing_cnt);
-        assert(unused_sokcet_id_list.size() > 0); // 至少有一个没有使用过的编号
+        ASSERT(unused_sokcet_id_list.size() > 0); // 至少有一个没有使用过的编号
 
         parseArrange();                  // 先把图像稀疏化，使得一定有边可以相连
         saveOne(unused_sokcet_id_list);  // 把一组 sokcet_id 连接起来

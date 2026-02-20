@@ -1,11 +1,11 @@
 #pragma once
 
-#include <cassert>
 #include <vector>
 #include <iomanip>
 #include <iostream>
 
 #include "AbstractIntMatrix.h"
+#include "../../Utils/MyAssert.h"
 
 class IntMatrix: public AbstractIntMatrix {
 private:
@@ -35,7 +35,7 @@ public:
     }
 
     virtual void setPos(int i, int j, int v) override {
-        assert(0 <= i && i < m_row && 0 <= j && j < m_col);
+        ASSERT(0 <= i && i < m_row && 0 <= j && j < m_col);
         m_vec[i][j] = v;
     }
 

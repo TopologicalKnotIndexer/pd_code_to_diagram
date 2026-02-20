@@ -1,11 +1,11 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 #include <iostream>
 #include <set>
 #include <tuple>
 #include <vector>
+#include "../../Utils/MyAssert.h"
 
 template<typename _T>
 std::set<_T> mergeSet(const std::set<_T>& s1, const std::set<_T>& s2) {
@@ -58,27 +58,27 @@ public:
 
     int xRank(int x) {
         setToVec();
-        assert(xIntSet.find(x) != xIntSet.end());
+        ASSERT(xIntSet.find(x) != xIntSet.end());
         return std::lower_bound(xIntVec.begin(), xIntVec.end(), x) - xIntVec.begin();
     }
 
     int yRank(int y) {
         setToVec();
-        assert(yIntSet.find(y) != yIntSet.end());
+        ASSERT(yIntSet.find(y) != yIntSet.end());
         return std::lower_bound(yIntVec.begin(), yIntVec.end(), y) - yIntVec.begin();
     }
 
     int xkRank(int x, int k) {
-        assert(k >= 1);
+        ASSERT(k >= 1);
         setToVec();
-        assert(xIntSet.find(x) != xIntSet.end());
+        ASSERT(xIntSet.find(x) != xIntSet.end());
         return xRank(x) * k;
     }
 
     int ykRank(int y, int k) {
-        assert(k >= 1);
+        ASSERT(k >= 1);
         setToVec();
-        assert(yIntSet.find(y) != yIntSet.end());
+        ASSERT(yIntSet.find(y) != yIntSet.end());
         return yRank(y) * k;
     }
 };

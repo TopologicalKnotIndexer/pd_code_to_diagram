@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cassert>
 #include <iostream>
 #include <vector>
 
@@ -9,6 +8,7 @@
 
 #include "../Common/Coord2dSet.h"
 #include "../Common/LineData.h"
+#include "../../Utils/MyAssert.h"
 
 class VectorGraphEngine: public AbstractGraphEngine {
 private:
@@ -53,7 +53,7 @@ public:
 
     // 对所有坐标值进行映射
     void commitCoordMap(Coord2dSet& coord2d_set, int k) {
-        assert(k >= 1);
+        ASSERT(k >= 1);
         // 构建新的 std::vector<LineData> 和 PixelGraphEngine
         std::vector<LineData> new_lineDataSet;
         PixelGraphEngine      new_pge;

@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "../GraphEngine/AbstractGraphEngine.h"
+#include "../../Utils/MyAssert.h"
 
 // MarginGraphEngineWrap 的用途是为一个地图提供边界
 // 边界外的地方都被视为同一个值
@@ -21,8 +22,8 @@ public:
         int _xf, int _yf, int _xt, int _yt
     ): age(_age) {
 
-        assert(_xmin <= _xmax && _ymin <= _ymax);
-        assert(_rawVal != 0); // 空气不能作为外界的值
+        ASSERT(_xmin <= _xmax && _ymin <= _ymax);
+        ASSERT(_rawVal != 0); // 空气不能作为外界的值
         xmin = _xmin;
         xmax = _xmax;
         ymin = _ymin;
@@ -37,7 +38,7 @@ public:
     }
 
     virtual std::vector<std::tuple<int, int>> getAllNegPos() const override {
-        assert(rawVal >= 0); // 如果 rawVal < 0 则有无穷个负数值，不能这么做
+        ASSERT(rawVal >= 0); // 如果 rawVal < 0 则有无穷个负数值，不能这么做
         auto pos_list = age.getAllNegPos();
         std::vector<std::tuple<int, int>> new_pos_list;
         for(auto item: pos_list) {
@@ -67,7 +68,7 @@ public:
 
     virtual void setPos(int x, int y, int v) override {
         std::cerr << "error: can not setPos for GraphEngineWrap" << std::endl;
-        assert(false);
+        ASSERT(false);
     }
 
     virtual std::tuple<int, int, int, int> getBorderCoord() const override {

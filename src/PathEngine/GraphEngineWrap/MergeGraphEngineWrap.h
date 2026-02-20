@@ -3,6 +3,7 @@
 #include <iostream>
 #include <set>
 #include "../GraphEngine/AbstractGraphEngine.h"
+#include "../../Utils/MyAssert.h"
 
 // MergeGraphEngineWrap 用于合并两个抽象图引擎
 // 但是他合并后得到的抽象图引擎并不允许修改
@@ -73,6 +74,6 @@ public:
     // 设置一个位置的值
     virtual void setPos(int x, int y, int v) override {
         std::cerr << "error: can not setPos for MergeGraphEngineWrap" << std::endl;
-        assert(false);
+        ASSERT(false);
     }
 };

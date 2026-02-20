@@ -3,6 +3,7 @@
 #include <iostream>
 #include <set>
 #include "../GraphEngine/AbstractGraphEngine.h"
+#include "../../Utils/MyAssert.h"
 
 // 在基本遵循原图的前提下
 // 强制删除几个点，保证这几个点必须返回零，其他点保持不变
@@ -37,7 +38,7 @@ public:
     virtual int getPos(int x, int y) const override {
         if(force_empty_pos.size() != 3 && force_empty_pos.size() != 4) {
             std::cerr << "warning: in ErasePointGraphEngineWrap, force_empty_pos.size() != 3 or 4" << std::endl;
-            assert(false);
+            ASSERT(false);
         }
 
         // 强制清零
@@ -57,6 +58,6 @@ public:
     // 不允许设置一个位置的值
     virtual void setPos(int x, int y, int v) override {
         std::cerr << "error: can not setPos for ErasePointGraphEngineWrap" << std::endl;
-        assert(false);
+        ASSERT(false);
     }
 };

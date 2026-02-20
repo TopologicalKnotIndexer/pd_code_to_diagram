@@ -5,6 +5,7 @@
 #include <set>
 #include <vector>
 #include "../GraphEngine/AbstractGraphEngine.h"
+#include "../../Utils/MyAssert.h"
 
 class SpanGraphEngineWrap: public AbstractGraphEngine {
 private:
@@ -52,7 +53,7 @@ public:
     // 不允许设置一个位置的值
     virtual void setPos(int x, int y, int v) override {
         std::cerr << "error: can not setPos for SpanGraphEngineWrap" << std::endl;
-        assert(false);
+        ASSERT(false);
     }
 
     virtual std::vector<std::tuple<int, int>> getAllNegPos() const override {

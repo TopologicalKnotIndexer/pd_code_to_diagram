@@ -9,8 +9,9 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "../../Utils/Direction.h"
 #include "../../Utils/Coord2dPosition.h" // 这里有方向和坐标位移的对应关系
+#include "../../Utils/Direction.h"
+#include "../../Utils/MyAssert.h"
 
 #include "AbstractPathAlgorithm.h"
 #include "../GraphEngine/AbstractGraphEngine.h"
@@ -177,7 +178,7 @@ public:
             }
         }
         std::reverse(arr.begin(), arr.end()); // 反转这个序列
-        assert(arr.size() >= 1);
+        ASSERT(arr.size() >= 1);
         return std::make_tuple(
             dis[old_pos_now], getVecLineData(arr)); // 从途径点上的信息合并得到最终的路径
     }

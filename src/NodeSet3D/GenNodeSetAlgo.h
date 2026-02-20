@@ -5,6 +5,7 @@
 
 #include "NodeSet3D.h"
 #include "../PathEngine/GraphEngine/AbstractGraphEngine.h"
+#include "../Utils/MyAssert.h"
 
 class GenNodeSetAlgo {
 private:
@@ -20,7 +21,7 @@ private:
         int yf = line_data.getYf();
         int yt = line_data.getYt();
         int v  = line_data.getV ();
-        assert(xf == xt || yf == yt); // 只能是一条线段
+        ASSERT(xf == xt || yf == yt); // 只能是一条线段
         if(v <= 0) return;            // 只处理正边权
         if(xf == xt) {
             int xpos = xf;
@@ -75,7 +76,7 @@ private:
             std::tie(xmid, ymid) = crossing_coord2d;
 
             auto val = age.getPos(xmid, ymid);
-            assert(val == -1 || val == -2);
+            ASSERT(val == -1 || val == -2);
 
             const int dx = (val == -1) ? 0 : 1; // 用来表明延伸方向
             const int dy = 1 - dx;

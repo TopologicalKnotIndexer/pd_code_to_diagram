@@ -1,12 +1,13 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 #include <functional>  // 包含 std::hash
 #include <iostream>
 #include <unordered_map>
 #include <set>
 #include <tuple>
+
+#include "../Utils/MyAssert.h"
 
 // 为 std::tuple<int, int, int> 特化 std::hash
 namespace std {
@@ -67,15 +68,15 @@ public:
 
     // 根据空间坐标信息获得节点编号
     int getNodeId(_T x, _T y, _T z) const {
-        assert(coord_to_id.count(std::make_tuple(x, y, z)) >= 1); // 必须出现过
+        ASSERT(coord_to_id.count(std::make_tuple(x, y, z)) >= 1); // 必须出现过
         return coord_to_id.find(std::make_tuple(x, y, z)) -> second;
     }
 
     // 向集合中插入一条边
     void link(int id1, int id2) {
-        assert(id1 != id2);
-        assert(1 <= id1 && id1 <= node_cnt);
-        assert(1 <= id2 && id2 <= node_cnt);
+        ASSERT(id1 != id2);
+        ASSERT(1 <= id1 && id1 <= node_cnt);
+        ASSERT(1 <= id2 && id2 <= node_cnt);
         if(id1 > id2) std::swap(id1, id2);
 
         link_set.insert(std::make_tuple(id1, id2));
