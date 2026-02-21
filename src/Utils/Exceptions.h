@@ -18,6 +18,15 @@ public: \
     } \
 }
 
+// 这条宏用来处理异常
+// 他的功能是生成一个 catch 语句并在 catch 语句中打印错误相关的信息 (DEBUG 模式下才打印)
+// 打印完信息后，执行 OTHER_CMD 中给出的语句
+#define PROCESS_EXCEPTION(EXCEPTION_TYPE, OTHER_CMD) \
+catch(const EXCEPTION_TYPE& re){ \
+    SHOW_DEBUG_MESSAGE(re.what()); \
+    OTHER_CMD; \
+}
+
 // 边界暴露异常
 // 没有把指定的边界暴露出来
 DEFINE_EXCEPTION(BadBorderException);

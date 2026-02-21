@@ -11,8 +11,8 @@
 class IntMatrix: public AbstractIntMatrix {
 private:
     std::vector<std::vector<int> > m_vec;
-    const int m_row;
-    const int m_col;
+    int m_row;
+    int m_col;
 
 public:
     virtual ~IntMatrix() {} // 虚析构函数
@@ -25,6 +25,14 @@ public:
         for(int i = 0; i < n; i += 1) {
             m_vec.push_back(one_line); // 拷贝构造
         }
+    }
+
+    // 赋值函数
+    IntMatrix& operator=(const IntMatrix& rhs) {
+        this -> m_vec = rhs.m_vec;
+        this -> m_row = rhs.m_row;
+        this -> m_col = rhs.m_col;
+        return (*this);
     }
 
     IntMatrix2 toIntMatrix2() const {

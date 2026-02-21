@@ -24,9 +24,10 @@ private:
     SocketInfo socket_info;
     VectorGraphEngine treeEdgeVGE;
     VectorGraphEngine crossingVGE;
-    const int crossing_cnt;
+    int crossing_cnt;
 
     void rawParsify(int k) {
+        ASSERT(crossing_cnt > 0);
         auto c2ds1 = treeEdgeVGE.getCoord2dSet();
         auto c2ds2 = crossingVGE.getCoord2dSet();
         auto c2dsm = Coord2dSet::merge(c2ds1, c2ds2);
@@ -38,10 +39,12 @@ private:
 
     // 保持两个节点之间距离
     void parseArrange() {
+        ASSERT(crossing_cnt > 0);
         rawParsify(6);
     }
 
     void saveOne(const std::vector<int>& unused_sokcet_id_list) {
+        ASSERT(crossing_cnt > 0);
         auto socket_id = unused_sokcet_id_list[0];
 
         // 构建去掉四个点的图
@@ -138,11 +141,13 @@ private:
 
     // 稠密化
     void compactArrange() {
+        ASSERT(crossing_cnt > 0);
         rawParsify(2);
     }
 
     // 试图将最近的一组边放置到图上
     void buildOne() {
+        ASSERT(crossing_cnt > 0);
         auto unused_sokcet_id_list = socket_info.getAllUnusedId(crossing_cnt);
         ASSERT(unused_sokcet_id_list.size() > 0); // 至少有一个没有使用过的编号
 
@@ -153,6 +158,7 @@ private:
 
     // 试图最终把所有边都放到图上
     void buildAll() {
+        ASSERT(crossing_cnt > 0);
         while(socket_info.getUsedCnt() < 2 * crossing_cnt) {
             buildOne();
         }
@@ -170,9 +176,15 @@ public:
         buildAll();
     }
 
+    // 试图构造一个无参数版本
+    LinkAlgo() {
+        crossing_cnt = -1;
+    }
+
     // 这里的做法就是，直接把交叉点叠加到所有树边构成的图上就行
     // 这里获得的图，在交叉点位置是负数，其他点位置是正数
     MergeGraphEngineWrap getFinalGraph() {
+        ASSERT(crossing_cnt > 0);
         return MergeGraphEngineWrap(
             crossingVGE,
             treeEdgeVGE
@@ -182,6 +194,7 @@ public:
     // 拷贝当前所有树边的信息
     // 其中只包含所有的边
     std::vector<LineData> getAllEdges() const {
+        ASSERT(crossing_cnt > 0);
         return treeEdgeVGE.getAllEdges();
     }
 };

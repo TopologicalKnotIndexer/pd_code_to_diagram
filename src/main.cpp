@@ -5,12 +5,17 @@
 // 这个功能用于编译 .so 或者 .dll 文件
 // #define NO_MAIN 
 
-// 在编译时引入 -DDEBUG 可以在 main 函数中输出调试信息
-#ifndef DEBUG
-    #define DEBUG (0)
+// 在编译时引入 -DDEBUG 可以输出调试信息
+#ifdef DEBUG
+    #if DEBUG
+        #undef DEBUG
+        #define DEBUG (1)
+    #else
+        #undef DEBUG
+        #define DEBUG (0)
+    #endif
 #else
-    #undef DEBUG
-    #define DEBUG (1)
+    #define DEBUG (0)
 #endif
 
 #include <iostream>
@@ -23,10 +28,15 @@
 #include "PDTreeAlgo/PDCode.h"
 #include "PDTreeAlgo/PDTree.h"
 #include "PDTreeAlgo/SocketInfo.h"
+#include "PdToDiagram2d.h"
 #include "PathEngine/Common/GetBorderSet.h"
 #include "Utils/StringStream.h"
 
-void try_once(unsigned int seed, int last_socket_id, std::stringstream& ss, 
+// 从 stringstream 读入一个 pd_code
+// 然后试图构建二维布局或者三维布局
+// 如果失败会抛出异常
+void try_many_times(unsigned int min_seed, int last_socket_id, std::stringstream& ss, 
+    int max_try,
     bool show_diagram, // 是否显示二维布局图
     bool show_serial,  // 是否显示三位空间信息序列化表示
     bool with_zero,    // 输出二维布局图时是否使用零作为空位占位符
@@ -34,33 +44,9 @@ void try_once(unsigned int seed, int last_socket_id, std::stringstream& ss,
     bool components    // 输出所有联通分支相关信息
 ) {
     
-    // 重置随机种子
-    myrandom::setSeed(seed);
-
-    SHOW_DEBUG_MESSAGE("input pd_code ...");
-    PDCode pd_code;
-    pd_code.InputPdCode(ss); // 输入一个 pd_code
-
-    SHOW_DEBUG_MESSAGE("generating pd_tree ...");
-    PDTree pd_tree;
-
-    // 生成树形图直到没有交叉点重叠
-    while(true) {
-        pd_tree.clear();
-        pd_tree.load(pd_code, last_socket_id); // 生成树形图
-        if(pd_tree.checkNoOverlay()) {
-            break;
-        }
-    }
-
-    SHOW_DEBUG_MESSAGE("generating and checking socket_info ...");
-    SocketInfo s_info = pd_tree.getSocketInfo(); // 生成完全的插头信息
-    int component_cnt = pd_tree.getComponentCnt();
-    s_info.check(pd_code.getCrossingNumber(), component_cnt);   // 检查信息合法性
-
-    SHOW_DEBUG_MESSAGE("running link algo ...");
-    LinkAlgo link_algo(pd_code.getCrossingNumber(), s_info, component_cnt);
-    auto im = link_algo.getFinalGraph().exportToIntMatrix();
+    // 先计算二维布局
+    auto pdToDiagram2d = PdToDiagram2d();
+    auto [link_algo, im] = pdToDiagram2d.convert(min_seed, last_socket_id, ss, max_try);
 
     // 检查最大编号所在的连通分支是否在最外圈
     auto im2 = im.toIntMatrix2();
@@ -73,6 +59,8 @@ void try_once(unsigned int seed, int last_socket_id, std::stringstream& ss,
     }
 
     // 显示所有连通分支
+    // 这里的设计并不完美，因为其实这个地方并不依赖平面图的构建
+    // 因此将来可以改成直接从 PD_CODE 计算这个 components
     if(components) {
         detector.showAllCc(im2);
         return;
@@ -93,15 +81,6 @@ void try_once(unsigned int seed, int last_socket_id, std::stringstream& ss,
         GetBorderSet gbs(im);
         gbs.debugOutput(std::cout); // 仅仅输出边界信息
     }
-}
-
-// 这条宏用来处理异常
-// 他的功能是生成一个 catch 语句并在 catch 语句中打印错误相关的信息 (DEBUG 模式下才打印)
-// 打印完信息后，执行 OTHER_CMD 中给出的语句
-#define PROCESS_EXCEPTION(EXCEPTION_TYPE, OTHER_CMD) \
-catch(const EXCEPTION_TYPE& re){ \
-    SHOW_DEBUG_MESSAGE(re.what()); \
-    OTHER_CMD; \
 }
 
 #ifndef NO_MAIN // 如果 NO_MAIN 标志存在，则不编译 main 函数
@@ -141,34 +120,10 @@ int main(int argc, char** argv) {
     // read in all content in stdin
     auto ss = readCinToStringStream();
     int max_try = 100;
+    unsigned int min_seed = 42;
 
-    bool fail = true;
-    bool suc = false;
-    for(unsigned int seed = 42; seed <= 42 + max_try; seed += 1) {
-        try{
-            REWIND_STRING_STREAM(ss);
-
-            // last_socket_id = -1 表示让最大编号元素在最外圈
-            try_once(seed, 1, ss, show_diagram, show_serial, with_zero, show_border, components);
-            fail = false; // 没有失败
-            suc = true;   // 成功了
-        }
-        PROCESS_EXCEPTION(CrossingMeetException, fail = true)
-        PROCESS_EXCEPTION(BadBorderException, fail = true)
-
-        if(!fail) { //  如果没失败就退出
-            break;
-        }
-    }
-
-    // 如果没有成功，则抛出异常
-    if(!suc) { 
-        SHOW_DEBUG_MESSAGE(
-            std::string("failed after ") 
-            + std::to_string(max_try) 
-            + std::string(" try."));
-    }
-    ASSERT(suc);
+    // 尝试给出答案
+    try_many_times(min_seed, -1, ss, max_try, show_diagram, show_serial, with_zero, show_border, components);
     return 0;
 }
 #endif
