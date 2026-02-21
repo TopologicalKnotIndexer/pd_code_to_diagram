@@ -4,6 +4,8 @@
 #include <tuple>
 
 #include "BorderDetect/BorderDetect.h"
+#include "BorderDetect/Graph/ConnectedComponents.h"
+#include "BorderDetect/Graph/Graph.h"
 #include "PathEngine/Common/IntMatrix.h"
 #include "PdTreeAlgo/PDCode.h"
 #include "PdTreeAlgo/PDTree.h"
@@ -103,5 +105,27 @@ public:
         }
         ASSERT(suc);
         return ans;
+    }
+
+    // 给定一个 pd_code，计算其中的所有连通分支
+    virtual std::vector<std::set<int>> getAllCc(std::stringstream& pd_code_ss) const {
+        PDCode pd_code;
+        pd_code.InputPdCode(pd_code_ss); // 输入一个 pd_code
+
+        // 构建一个双向图
+        Graph node_graph;
+        for(int i = 0; i < pd_code.getCrossingNumber(); i += 1) {
+            auto crossing = pd_code.getCrossing(i);
+            for(int j = 0; j <= 1; j += 1) {
+                int frm = crossing.getRaw(j);
+                int eto = crossing.getRaw(j + 2);
+                node_graph.addEdge(frm, eto);
+            }
+        }
+
+        // 计算所有连通分支
+        auto cc_alg = ConnectedComponents(node_graph);
+        auto all_cc = cc_alg.getConnectedComponents();
+        return all_cc;
     }
 };

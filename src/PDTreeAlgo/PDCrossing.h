@@ -21,6 +21,17 @@ public:
         ASSERT(crs.size() == 4);
     }
 
+    // 获取原始数据
+    const std::vector<int> getRaw() const {
+        return crs;
+    }
+
+    // 获取原始数据
+    int getRaw(int idx) const {
+        ASSERT(0 <= idx && idx < crs.size());
+        return crs[idx];
+    }
+
     // 检查当前对象是否正常，如果当前对象异常则 assert 报错
     void sanityCheck() const {
 

@@ -43,8 +43,7 @@ public:
     }
 
     // 输出所有连通分支到一个 json 字符串
-    virtual std::string jsonifyAllCc(const IntMatrix2& imx) const {
-        auto all_cc = getAllCc(imx);
+    virtual std::string jsonifyAllCc(const std::vector<std::set<int>>& all_cc) const {
         std::string json_string;
 
         bool first_line = true;
