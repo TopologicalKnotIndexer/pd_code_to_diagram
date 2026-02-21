@@ -34,32 +34,41 @@ private:
 
 public:
 
-    virtual void showAllCc(const IntMatrix2& imx) const {
+    // 获取所有联通分支
+    virtual std::vector<std::set<int>> getAllCc(const IntMatrix2& imx) const {
         auto dg = DiagramGraph(imx);
         auto cc_alg = ConnectedComponents(dg);
         auto all_cc = cc_alg.getConnectedComponents();
+        return all_cc;
+    }
+
+    // 输出所有连通分支到一个 json 字符串
+    virtual std::string jsonifyAllCc(const IntMatrix2& imx) const {
+        auto all_cc = getAllCc(imx);
+        std::string json_string;
 
         bool first_line = true;
-        std::cout << "[\n";
+        json_string += "[\n";
         for(const auto& cc: all_cc) {
             if(first_line) {
                 first_line = false;
             }else {
-                std::cout << ",\n";
+                json_string += ",\n";
             }
             bool first = true;
             for(const auto& item: cc) {
                 if(first) {
                     first = false;
-                    std::cout << "    [";
+                    json_string += "    [";
                 }else {
-                    std::cout << ", ";
+                    json_string += ", ";
                 }
-                std::cout << item;
+                json_string += std::to_string(item);
             }
-            std::cout << "]";
+            json_string += "]";
         }
-        std::cout << "\n]\n";
+        json_string += "\n]\n";
+        return json_string;
     }
 
     // 检查最大编号所在的连通分支是否在边界上

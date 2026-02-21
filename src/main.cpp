@@ -62,7 +62,7 @@ void try_many_times(unsigned int min_seed, int last_socket_id, std::stringstream
     // 这里的设计并不完美，因为其实这个地方并不依赖平面图的构建
     // 因此将来可以改成直接从 PD_CODE 计算这个 components
     if(components) {
-        detector.showAllCc(im2);
+        std::cout << detector.jsonifyAllCc(im2);
         return;
     }
 
@@ -92,11 +92,12 @@ int main(int argc, char** argv) {
         args.push_back(std::string(argv[i]));
     }
     
-    bool show_diagram = false; // 是否要输出一个图
-    bool show_serial  = false; // 输出一个 3D 序列化
-    bool with_zero    = false; // 输出图的时候是否要
-    bool show_border  = false; // 是否要输出边界信息（输出边界信息的话，就不会输出图或者序列化表示）
-    bool components   = false; // 是否需要输出所有的联通分支
+    int  last_socket_id = -1;    // 默认最后一个 socket 所在的连通分支需要在最外侧
+    bool show_diagram   = false; // 是否要输出一个图
+    bool show_serial    = false; // 输出一个 3D 序列化
+    bool with_zero      = false; // 输出图的时候是否要
+    bool show_border    = false; // 是否要输出边界信息（输出边界信息的话，就不会输出图或者序列化表示）
+    bool components     = false; // 是否需要输出所有的联通分支
 
 // 用于定义所有参数信息
 #define DECLARE_ARGUMENT(LONG_NAME, SHORT_NAME, VAR_NAME) if(( \
@@ -112,6 +113,11 @@ int main(int argc, char** argv) {
         DECLARE_ARGUMENT(     "--serial", "-s",  show_serial)
         DECLARE_ARGUMENT(     "--border", "-b",  show_border)
         DECLARE_ARGUMENT( "--components", "-c",   components)
+
+        // 数字的情况可以用于设置 last_socket_id
+        if(args[i].size() > 2 && args[i].substr(0, 2) == "--" && isAllDigits(args[i].substr(2))) {
+            last_socket_id = std::stoi(args[i].substr(2));
+        }else
         { // 没有匹配时的默认处理方式
             std::cerr << "warning: undefined command line argument: " + args[i] << std::endl;
         }
@@ -123,7 +129,7 @@ int main(int argc, char** argv) {
     unsigned int min_seed = 42;
 
     // 尝试给出答案
-    try_many_times(min_seed, -1, ss, max_try, show_diagram, show_serial, with_zero, show_border, components);
+    try_many_times(min_seed, last_socket_id, ss, max_try, show_diagram, show_serial, with_zero, show_border, components);
     return 0;
 }
 #endif

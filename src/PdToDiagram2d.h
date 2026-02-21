@@ -50,6 +50,7 @@ public:
         auto im = link_algo.getFinalGraph().exportToIntMatrix();
 
         // 检查最大编号所在的连通分支是否在最外圈
+        SHOW_DEBUG_MESSAGE("checking border ...");
         auto im2 = im.toIntMatrix2();
         auto detector = BorderDetect();
         auto detector_flag = detector.checkBorderMaxCC(last_socket_id, im2);
