@@ -38,6 +38,11 @@ def run_with_redirect(cmd:list[str], stdin_path=None, stdout_path=None, encoding
         redirect_kwargs["stdin"] = open(stdin_path, "r", encoding=encoding)
     # 重定向标准输出
     if stdout_path:
+        if os.path.isfile(stdout_path): # 删除空文件
+            if open(stdout_path, "r").read().strip() == 0:
+                os.remove(stdout_path)
+        if os.path.isfile(stdout_path): # 跳过已经创建文件了的
+            return
         redirect_kwargs["stdout"] = open(stdout_path, "w", encoding=encoding)
     
     try:
@@ -73,19 +78,20 @@ def sorted_knot_name(knot_list:list[str]) -> list[str]:
     return sorted(knot_list, key=lambda knotname: (
         crossing_num(knotname), knot_type(knotname), knot_inner_index(knotname)))
 
-def process_all_file(pre:list, perfile:list, after:list):
+def process_all_file(pre:list, perfile:list, after:list, mod:int=1, res:int=0):
     for item in pre:
         item()
     
     knot_name_list = sorted_knot_name(list(os.listdir(PD_CODE)))
     for idx, filename in enumerate(knot_name_list):
         inp_filepath = os.path.join(PD_CODE, filename)
-        for func in perfile:
-            func(inp_filepath, idx, len(knot_name_list))
+        if knot_inner_index(filename[:-4]) % mod == res: # 仅仅处理一个同余等价类
+            for func in perfile:
+                func(inp_filepath, idx, len(knot_name_list))
     for item in after:
         item()
 
-def output_template(aim_dir:str, cmd:list[str]):
+def output_template(aim_dir:str, cmd:list[str], mod, res):
     begin_time = time.time()
     process_all_file([
         lambda: os.makedirs(aim_dir, exist_ok=True)
@@ -96,23 +102,34 @@ def output_template(aim_dir:str, cmd:list[str]):
         
         lambda x, idx, total: (run_with_redirect([A_EXE] + cmd, 
                                      x, os.path.join(aim_dir, os.path.basename(x))))
-    ], [])
+    ], [], mod, res)
 
 # 输出所有三维结构
-def create_all_coord3d():
-    output_template(COORD3D, ["-s"])
+def create_all_coord3d(mod, res):
+    output_template(COORD3D, ["-s"], mod, res)
 
 # 输出所有二维图
-def create_all_diagram():
-    output_template(DIAGRAM, ["-d"])
+def create_all_diagram(mod, res):
+    output_template(DIAGRAM, ["-d"], mod, res)
 
 # 输出所有带 0 二维图
-def create_all_diagram_zero():
-    output_template(DIAGRAM_ZERO, ["-d", "-z"])
+def create_all_diagram_zero(mod, res):
+    output_template(DIAGRAM_ZERO, ["-d", "-z"], mod, res)
 
 # 测试同一个 pd_code 是否能总保证任何连通分支都有暴露在外面的构型
-def create_all_diagram_test():
-    output_template(DIAGRAM_TEST, ["-t"])
+def create_all_diagram_test(mod, res):
+    output_template(DIAGRAM_TEST, ["-t"], mod, res)
 
 if __name__ == "__main__":
-    create_all_diagram_test()
+    try:
+        mod, res = input("mod, res: ").split()
+        mod = int(mod)
+        res = int(res)
+    except:
+        mod = 1 # 默认扫描所有文件
+        res = 0
+
+    assert mod >= 1
+    assert 0 <= res < mod # 当前线程仅仅处理 % mod 余数为 res 的文件
+
+    create_all_diagram_test(mod, res)
