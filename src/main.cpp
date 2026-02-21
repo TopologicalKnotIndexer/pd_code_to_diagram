@@ -24,89 +24,61 @@
 #include "PDTreeAlgo/PDTree.h"
 #include "PDTreeAlgo/SocketInfo.h"
 #include "PathEngine/Common/GetBorderSet.h"
+#include "Utils/StringStream.h"
 
-// 安全获取stringstream全部内容且不改变其状态的函数
-std::string getStreamContentWithoutChange(std::stringstream& ss) {
-    // 1. 记录当前流的读写位置（核心：保存状态）
-    std::ios::pos_type originalPos = ss.tellg();
+void try_once(unsigned int seed, int last_socket_id, std::stringstream& ss, 
+    bool show_diagram, // 是否显示二维布局图
+    bool show_serial,  // 是否显示三位空间信息序列化表示
+    bool with_zero,    // 输出二维布局图时是否使用零作为空位占位符
+    bool show_border,  // 仅仅输出在边界上的所有 socket_id
+    bool components    // 输出所有联通分支相关信息
+) {
     
-    // 2. 将流的读取位置重置到起始处
-    ss.seekg(0, std::ios::beg);
-    
-    // 3. 读取全部内容
-    std::string content((std::istreambuf_iterator<char>(ss)), std::istreambuf_iterator<char>());
-    
-    // 4. 恢复流的原始读写位置（核心：还原状态）
-    ss.seekg(originalPos);
-    
-    return content;
-}
-
-// 将 cin 中的所有内容读取到 stringstream 中
-// 返回值：填充了 cin 内容的 stringstream 对象
-// 异常：读取失败时抛出 runtime_error 异常
-std::stringstream readCinToStringStream() {
-    std::stringstream ss;
-    std::string line;
-
-    try {
-        // 逐行读取 cin 所有内容，直到 EOF（结束符）
-        // Windows 下按 Ctrl+Z 回车触发 EOF，Linux/Mac 下按 Ctrl+D 触发 EOF
-        while (std::getline(std::cin, line)) {
-            // 将读取到的行写入 stringstream，保留换行符（还原原始输入格式）
-            ss << line << '\n';
-        }
-
-        // 检查读取过程是否出现错误（非 EOF 导致的失败）
-        if (std::cin.bad()) {
-            throw std::runtime_error("cin 读取过程中发生严重错误");
-        }
-
-        // 重置 stringstream 的读取位置到开头（方便后续直接使用）
-        ss.clear(); // 清除可能的 eofbit
-        ss.seekg(0, std::ios::beg);
-    }
-    catch (const std::exception& e) {
-        // 捕获并包装异常，让调用方更清晰地知道错误来源
-        throw std::runtime_error("cin error：" + std::string(e.what()));
-    }
-
-    return ss;
-}
-
-void try_once(unsigned int seed, std::stringstream& ss, bool show_diagram, bool show_serial, bool with_zero, bool show_border) {
+    // 重置随机种子
     myrandom::setSeed(seed);
 
-    if(DEBUG) std::cerr << "input pd_code ..." << std::endl;
+    SHOW_DEBUG_MESSAGE("input pd_code ...");
     PDCode pd_code;
     pd_code.InputPdCode(ss); // 输入一个 pd_code
 
-    if(DEBUG) std::cerr << "generating pd_tree ..." << std::endl;
+    SHOW_DEBUG_MESSAGE("generating pd_tree ...");
     PDTree pd_tree;
 
     // 生成树形图直到没有交叉点重叠
     while(true) {
         pd_tree.clear();
-        pd_tree.load(pd_code); // 生成树形图
+        pd_tree.load(pd_code, last_socket_id); // 生成树形图
         if(pd_tree.checkNoOverlay()) {
             break;
         }
     }
 
-    if(DEBUG) std::cerr << "generating and checking socket_info ..." << std::endl;
+    SHOW_DEBUG_MESSAGE("generating and checking socket_info ...");
     SocketInfo s_info = pd_tree.getSocketInfo(); // 生成完全的插头信息
     int component_cnt = pd_tree.getComponentCnt();
     s_info.check(pd_code.getCrossingNumber(), component_cnt);   // 检查信息合法性
 
-    if(DEBUG) std::cerr << "running link algo ..." << std::endl;
+    SHOW_DEBUG_MESSAGE("running link algo ...");
     LinkAlgo link_algo(pd_code.getCrossingNumber(), s_info, component_cnt);
     auto im = link_algo.getFinalGraph().exportToIntMatrix();
 
     // 检查最大编号所在的连通分支是否在最外圈
+    auto im2 = im.toIntMatrix2();
     auto detector = BorderDetect();
-    ASSERT(detector.checkBorderMaxCC(im.toIntMatrix2()));
+    auto detector_flag = detector.checkBorderMaxCC(last_socket_id, im2);
 
-    if(DEBUG) std::cerr << "output ans ..." << std::endl;
+    // 检查布局算法是否成功
+    if(!detector_flag) {
+        THROW_EXCEPTION(BadBorderException, "");
+    }
+
+    // 显示所有连通分支
+    if(components) {
+        detector.showAllCc(im2);
+        return;
+    }
+
+    SHOW_DEBUG_MESSAGE("output ans ...");
     GenNodeSetAlgo gen_node_set_algo(link_algo.getFinalGraph(), link_algo.getAllEdges());
     
     if(show_diagram) {
@@ -123,6 +95,15 @@ void try_once(unsigned int seed, std::stringstream& ss, bool show_diagram, bool 
     }
 }
 
+// 这条宏用来处理异常
+// 他的功能是生成一个 catch 语句并在 catch 语句中打印错误相关的信息 (DEBUG 模式下才打印)
+// 打印完信息后，执行 OTHER_CMD 中给出的语句
+#define PROCESS_EXCEPTION(EXCEPTION_TYPE, OTHER_CMD) \
+catch(const EXCEPTION_TYPE& re){ \
+    SHOW_DEBUG_MESSAGE(re.what()); \
+    OTHER_CMD; \
+}
+
 #ifndef NO_MAIN // 如果 NO_MAIN 标志存在，则不编译 main 函数
 int main(int argc, char** argv) {
 
@@ -136,24 +117,28 @@ int main(int argc, char** argv) {
     bool show_serial  = false; // 输出一个 3D 序列化
     bool with_zero    = false; // 输出图的时候是否要
     bool show_border  = false; // 是否要输出边界信息（输出边界信息的话，就不会输出图或者序列化表示）
+    bool components   = false; // 是否需要输出所有的联通分支
+
+// 用于定义所有参数信息
+#define DECLARE_ARGUMENT(LONG_NAME, SHORT_NAME, VAR_NAME) if(( \
+    args[i] == (LONG_NAME) || args[i] == (SHORT_NAME)) \
+) { \
+    (VAR_NAME) = true; \
+}else
+
+    // 处理命令行参数
     for(int i = 0; i < args.size(); i += 1) {
-        if(args[i] == "--diagram" || args[i] == "-d") {
-            show_diagram = true;
-        }
-        else if(args[i] == "--with_zero" || args[i] == "-z") {
-            with_zero = true;
-        }
-        else if(args[i] == "--serial" || args[i] == "-s") {
-            show_serial = true;
-        }
-        else if(args[i] == "--border" || args[i] == "-b") {
-            show_border = true;
-        }else {
+        DECLARE_ARGUMENT(    "--diagram", "-d", show_diagram)
+        DECLARE_ARGUMENT(  "--with_zero", "-z",    with_zero)
+        DECLARE_ARGUMENT(     "--serial", "-s",  show_serial)
+        DECLARE_ARGUMENT(     "--border", "-b",  show_border)
+        DECLARE_ARGUMENT( "--components", "-c",   components)
+        { // 没有匹配时的默认处理方式
             std::cerr << "warning: undefined command line argument: " + args[i] << std::endl;
         }
     }
 
-    // read in all content
+    // read in all content in stdin
     auto ss = readCinToStringStream();
     int max_try = 100;
 
@@ -161,24 +146,16 @@ int main(int argc, char** argv) {
     bool suc = false;
     for(unsigned int seed = 42; seed <= 42 + max_try; seed += 1) {
         try{
-            ss.clear(); // 清除可能的 eofbit
-            ss.seekg(0, std::ios::beg);
-            
-            if(DEBUG) {
-                auto ss_content = getStreamContentWithoutChange(ss);
-                std::cerr << "INPUT_BEGIN{" << ss_content << "}INPUT_END" << std::endl;
-            }
+            REWIND_STRING_STREAM(ss);
 
-            try_once(seed, ss, show_diagram, show_serial, with_zero, show_border);
+            // last_socket_id = -1 表示让最大编号元素在最外圈
+            try_once(seed, 1, ss, show_diagram, show_serial, with_zero, show_border, components);
             fail = false; // 没有失败
             suc = true;   // 成功了
-        }catch(const std::runtime_error& re){ // 截获异常，失败
-            fail = true;
-            if(DEBUG) {
-                std::cerr << "seed: " << seed << ", try_once failed" << std::endl;
-                std::cerr << re.what() << std::endl;
-            }
         }
+        PROCESS_EXCEPTION(CrossingMeetException, fail = true)
+        PROCESS_EXCEPTION(BadBorderException, fail = true)
+
         if(!fail) { //  如果没失败就退出
             break;
         }
@@ -186,9 +163,10 @@ int main(int argc, char** argv) {
 
     // 如果没有成功，则抛出异常
     if(!suc) { 
-        if(DEBUG) {
-            std::cerr << "failed after " << max_try << " try." << std::endl;
-        }
+        SHOW_DEBUG_MESSAGE(
+            std::string("failed after ") 
+            + std::to_string(max_try) 
+            + std::string(" try."));
     }
     ASSERT(suc);
     return 0;

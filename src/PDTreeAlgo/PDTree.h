@@ -8,6 +8,7 @@
 #include "../Utils/Coord2dPosition.h"
 #include "../Utils/Direction.h"
 #include "../Utils/MyAssert.h"
+#include "../Utils/Exceptions.h"
 #include "../Utils/Random.h"
 
 #include "PDCrossing.h"
@@ -125,11 +126,11 @@ private:
 
     // 根据编号大小对 socket 使用顺序进行惩罚
     // 这里应该让最大编号所在的联通分支增加一个惩罚
-    double calcSocketIdPunish(int socket_id, const std::set<int>& max_socket_component) const {
+    double calcSocketIdPunish(int socket_id, const std::set<int>& last_socket_component) const {
         const auto N = (pd_code.getCrossingNumber() + 1);
 
         // 对最大编号所在的联通分支进行惩罚
-        if(max_socket_component.find(socket_id) != max_socket_component.end()) {
+        if(last_socket_component.find(socket_id) != last_socket_component.end()) {
             return N;
         }else {
             return 0;
@@ -163,7 +164,7 @@ private:
     // leaf_id_map 将记录一些关于树上空闲插头的信息
     // 具体参考 getBestSocket 函数前的注释
     // max_socket_id 是插头的最大编号
-    void dfs(int x, int fa, std::map<int, LeafInfo>& leaf_id_map, const std::set<int>& max_socket_component) {
+    void dfs(int x, int fa, std::map<int, LeafInfo>& leaf_id_map, const std::set<int>& last_socket_component) {
         for(int i = 0; i < 4; i += 1) {
             if(structure[x].next_node[i] == fa) { // 避免对父节点进行递归
                 continue;
@@ -205,12 +206,12 @@ private:
                                 Coord2dPosition::getDeltaPositionByDirection((Direction)i)) * 0.5
                             - calcPositionPunish(new_pos)
                             - calcNearPunish(x, new_pos)
-                            - calcSocketIdPunish(socket_id, max_socket_component))
+                            - calcSocketIdPunish(socket_id, last_socket_component))
                     };
                 }
 
             }else { // 说明这不是一个空闲插头
-                dfs(structure[x].next_node[i], x, leaf_id_map, max_socket_component);
+                dfs(structure[x].next_node[i], x, leaf_id_map, last_socket_component);
             }
         }
     }
@@ -241,7 +242,7 @@ private:
         return leaf_id_list[0];
     }
 
-    std::tuple<bool, std::map<int, LeafInfo>> checkGetSocket(int root, const std::set<int>& max_socket_component) {
+    std::tuple<bool, std::map<int, LeafInfo>> checkGetSocket(int root, const std::set<int>& last_socket_component) {
         if(root <= -1) {
             return std::make_tuple(false, std::map<int, LeafInfo>());
         }
@@ -251,21 +252,28 @@ private:
         // leaf_id_map[socket_id] 赋值为这个 socket 的 LeafInfo
         // 第二次遇到同样的 socket_id 时，在 leaf_id_map 上删除 leaf_id_map[socket_id]
         std::map<int, LeafInfo> leaf_id_map;
-        dfs(root, -1, leaf_id_map, max_socket_component); // 这里的 fa 如果设为 0 会导致错误跳过一些分支
+        dfs(root, -1, leaf_id_map, last_socket_component); // 这里的 fa 如果设为 0 会导致错误跳过一些分支
 
         // 如果没有空闲的插头，说明树已经建完，不可以再调用 getBestSocket
         return std::make_tuple(leaf_id_map.size() > 0, leaf_id_map);
     }
 
     // 从零开始构建一棵四岔树
-    void buildTree() {
+    // last_socket_id 用于指定最后一个联通分支
+    // last_socket_id 设为 -1 则可以让最大编号所在的联通分支设为最后一个连通分支
+    void buildTree(int last_socket_id) {
         // 预先保存所有交叉点数
         const int n = pd_code.getCrossingNumber();
+
+        // 默认要求最大编号所在
         const int max_socket_id = 2 * n;
+        if(last_socket_id <= 0) {
+            last_socket_id = max_socket_id;
+        }
 
         // 获得最大编号所在的联通分支
         // 让最大编号所在的联通分支最后拓展
-        auto max_socket_component = pd_code.getComponent(max_socket_id);
+        auto last_socket_component = pd_code.getComponent(last_socket_id);
         ASSERT(n != 0);
 
         // 记录所有还没有被使用过的交叉点
@@ -283,7 +291,7 @@ private:
             // checkGetSocket 的功能：
             // 1. 判断 root 目前是否是合法的树，如果是空树，则 std::get<0>(pr) 为 false
             // 2. 在 std::get<1>(pr) 中给出当前树上的所有可用 socket 算法为 dfs
-            auto pr = checkGetSocket(root, max_socket_component);
+            auto pr = checkGetSocket(root, last_socket_component);
             if(!std::get<0>(pr)) {
                 // 先随机选择一个节点，用于生成根节点
                 // 根节点默认 base 方向朝向正东方向，并且坐标放置在原点处
@@ -300,7 +308,9 @@ private:
                 LeafInfo leaf_info = getBestSocket(root, std::get<1>(pr));
 
                 // 如果以下条件不成立，我们认为已经出现了重合位置
-                ASSERT(leaf_info.right >= - 0.5 * getPositionPunish());
+                if(!(leaf_info.right >= - 0.5 * getPositionPunish())) {
+                    THROW_EXCEPTION(CrossingMeetException, "");
+                }
 
                 // 在 unused 序列中找到第一次出现这个 socket_id 的 crossing
                 // 根据这个 crossing 的信息新建一个节点 
@@ -353,13 +363,15 @@ public:
     }
 
     // 加载一个 pd_code 并计算生成树
-    void load(PDCode new_pd_code) {
+    // last_socket_id = -1 表示让最大编号所在连通分支在最外圈
+    // last_socket_id > 0 则表示让 last_socket_id 所在联通分支在最外圈
+    void load(PDCode new_pd_code, int last_socket_id) {
         clear(); // 清除历史数据
 
         pd_code = new_pd_code;
         ASSERT(pd_code.getCrossingNumber() != 0);
 
-        buildTree(); // 构建树
+        buildTree(last_socket_id); // 构建树
     }
 
     // 检查

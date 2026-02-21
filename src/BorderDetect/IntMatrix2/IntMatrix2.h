@@ -1,6 +1,11 @@
 #pragma once
 
-#define DEBUG_INT_MATRIX (0)
+#ifndef DEBUG_INT_MATRIX
+    #define DEBUG_INT_MATRIX (0)
+#else
+    #undef DEBUG_INT_MATRIX
+    #define DEBUG_INT_MATRIX (1)
+#endif
 
 #include <iomanip>
 #include <iostream>
@@ -10,6 +15,7 @@
 #include "../IntMap/AbstractIntMap.h"
 #include "../IntCombine/AbstractIntCombine.h"
 #include "../../Utils/MyAssert.h"
+#include "../../Utils/Debug.h"
 
 class IntMatrix2: public AbstractIntMatrix2 {
 protected:
@@ -43,8 +49,13 @@ public:
     }
 
     virtual int getPos(int i, int j) const override {
-        if(DEBUG_INT_MATRIX && !(0 <= i && i < rcnt && 0 <= j && j < ccnt)) {
-            std::cerr << "(" << i << ", " << j << ") is outside of (" << rcnt << ", " << ccnt << ")" << std::endl;
+        // 在调试模式下输出出界信息
+        if(!(0 <= i && i < rcnt && 0 <= j && j < ccnt)) {
+            SHOW_CERTAIN_DEBUG_MESSAGE(DEBUG_INT_MATRIX, 
+                std::string("(") 
+                + std::to_string(i) + ", "
+                + std::to_string(j) + ") is outside of ("
+                + std::to_string(rcnt) + ", " + std::to_string(ccnt) + ")");
         }
         ASSERT(0 <= i && i < rcnt && 0 <= j && j < ccnt);
         return matrix_data[i][j];

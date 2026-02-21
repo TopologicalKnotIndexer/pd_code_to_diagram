@@ -1,0 +1,27 @@
+#pragma once
+
+#include <stdexcept>   // 异常基类
+
+// 用于在抛出异常时自动化构建异常信息（文件名行号）
+#define THROW_EXCEPTION(EXCEPTION_TYPE, MSG) \
+    throw EXCEPTION_TYPE(std::string(__FILE__) + ":" + std::to_string(__LINE__) + " " + std::string(#EXCEPTION_TYPE) + ":" + std::string(MSG))
+
+// 定义自定义异常
+#define DEFINE_EXCEPTION(EXCEPTION_TYPE) \
+class EXCEPTION_TYPE: public std::exception { \
+private: \
+    std::string error_msg; \
+public: \
+    explicit EXCEPTION_TYPE(std::string msg) : error_msg(std::move(msg)) {} \
+    const char* what() const noexcept override { \
+        return error_msg.c_str(); \
+    } \
+}
+
+// 边界暴露异常
+// 没有把指定的边界暴露出来
+DEFINE_EXCEPTION(BadBorderException);
+
+// 扭结 crossing 重合带来的异常
+// 这个异常在随机过程中经常不满足，需要多次尝试
+DEFINE_EXCEPTION(CrossingMeetException);

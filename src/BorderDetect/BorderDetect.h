@@ -17,6 +17,7 @@
 #include "IntMatrix2/ZeroOneMatrix.h"
 
 #include "../Utils/MyAssert.h"
+#include "../Utils/Debug.h"
 
 class BorderDetect {
 private:
@@ -33,32 +34,61 @@ private:
 
 public:
 
+    virtual void showAllCc(const IntMatrix2& imx) const {
+        auto dg = DiagramGraph(imx);
+        auto cc_alg = ConnectedComponents(dg);
+        auto all_cc = cc_alg.getConnectedComponents();
+
+        bool first_line = true;
+        std::cout << "[\n";
+        for(const auto& cc: all_cc) {
+            if(first_line) {
+                first_line = false;
+            }else {
+                std::cout << ",\n";
+            }
+            bool first = true;
+            for(const auto& item: cc) {
+                if(first) {
+                    first = false;
+                    std::cout << "    [";
+                }else {
+                    std::cout << ", ";
+                }
+                std::cout << item;
+            }
+            std::cout << "]";
+        }
+        std::cout << "\n]\n";
+    }
+
     // 检查最大编号所在的连通分支是否在边界上
     // 这里的 IntMatrix 是一个二维的 int 矩阵
     // 你需要保证最外围的一圈元素都是零（空地）
-    virtual bool checkBorderMaxCC(const IntMatrix2& imx) const {
+    // last_socket_id = -1 则要求最大编号 socket 所在连通分支在最外圈
+    // last_socket_id > 0 则要求 last_socket_id 所在连通分支在最外圈
+    virtual bool checkBorderMaxCC(int last_socket_id, const IntMatrix2& imx) const {
 
         // 获取整个矩阵中的最大元素
         auto mxv = imx.getMax(); 
         ASSERT(mxv > 0);
 
+        int lastv = mxv;
+        if(last_socket_id > 0) {
+            lastv = last_socket_id;
+        }
+
         // 将所有非零位置设置为 1
         auto mmx = ZeroOneMatrix(imx);
 
-        if(DEBUG_BORDER_DETECT) {
-            std::cerr << "Solving BFS" << std::endl;
-        }
-
         // 从左上角位置出发，遍历所有能走的空白位置
         // 1 是障碍物，0 是可通行位置
+        SHOW_CERTAIN_DEBUG_MESSAGE(DEBUG_BORDER_DETECT, "Solving BFS");
         BfsAlgo bfs_algo;
         auto vis_mx = bfs_algo.search(mmx, 0, 0);
 
-        if(DEBUG_BORDER_DETECT) {
-            std::cerr << "Solving Border" << std::endl;
-        }
-
         // 检索 0 区域的边界位置
+        SHOW_CERTAIN_DEBUG_MESSAGE(DEBUG_BORDER_DETECT, "Solving Border");
         auto border_pos_raw = BorderMask(std::make_shared<ZeroOneMatrix>(vis_mx), 0);
         auto border_pos     = ZeroOneMatrix(border_pos_raw);
 
@@ -66,26 +96,19 @@ public:
         // 筛选出所有在边界上的节点
         auto set_int = border_pos.select(imx);
 
-        if(DEBUG_BORDER_DETECT) {
-            std::cerr << "Solving Connected Component" << std::endl;
-        }
-
         // 计算原图中的所有联通分支
         // all_cc 包含了所有的 connected component 对应的 std::set<int>
+        SHOW_CERTAIN_DEBUG_MESSAGE(DEBUG_BORDER_DETECT, "Solving Connected Component");
         auto dg = DiagramGraph(imx);
         auto cc_alg = ConnectedComponents(dg);
         auto all_cc = cc_alg.getConnectedComponents();
 
-        // 找到最大编号对应的连通分量
-        auto mxv_cc = std::set<int>();
+        // 找到最后编号对应的连通分量
+        auto lastv_cc = std::set<int>();
         for(const auto& cc: all_cc) {
-            if(cc.find(mxv) != cc.end()) {
-                mxv_cc = cc;
+            if(cc.find(lastv) != cc.end()) {
+                lastv_cc = cc;
             }
-        }
-
-        if(DEBUG_BORDER_DETECT) {
-            std::cerr << "Checking Cover" << std::endl;
         }
 
         // 检查最大联通分支是否是独立在外的
@@ -93,6 +116,7 @@ public:
         // 能够保证一个连通分支在最外侧，因此大概率说明不改变 pdcode 也可以做联通和
         // 但是这一点需要进一步进行验证
         // 具体做法就是对所有 link 考虑将其所有联通分支 swap 成最大编号联通分支并生成扭结
-        return intersect(mxv_cc, set_int).size() != 0;
+        SHOW_CERTAIN_DEBUG_MESSAGE(DEBUG_BORDER_DETECT, "Checking Cover");
+        return intersect(lastv_cc, set_int).size() != 0;
     }
 };

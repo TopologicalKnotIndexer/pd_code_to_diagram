@@ -1,6 +1,11 @@
 #pragma once
 
-#define DEBUG_BFS (0)
+#ifndef DEBUG_BFS
+    #define DEBUG_BFS (0)
+#else
+    #undef DEBUG_BFS
+    #define DEBUG_BFS (1)
+#endif
 
 #include <queue>
 
@@ -8,6 +13,7 @@
 #include "../IntMatrix2/BorderWrap.h"
 
 #include "../../Utils/MyAssert.h"
+#include "../../Utils/Debug.h"
 
 class BfsAlgo {
 public:
@@ -36,18 +42,18 @@ public:
 
         while(!q.empty()) {
             auto [x, y] = q.front(); q.pop();
-
-            if(DEBUG_BFS) {
-                std::cerr << "- Checking Position " << "(" << x << ", " << y << ")" << std::endl;
-            }
+            SHOW_CERTAIN_DEBUG_MESSAGE(DEBUG_BFS, 
+                std::string("  - Checking Position (") 
+                    + std::to_string(x) + ", " + std::to_string(y) + ")");
 
             for(int d = 0; d < 4; d += 1) {
                 int nx = x + dx[d];
                 int ny = y + dy[d];
 
-                if(DEBUG_BFS) {
-                    std::cerr << "  - Checking Position " << "(" << nx << ", " << ny << ")" << std::endl;
-                }
+                // 在调试模式下输出访问到的位置
+                SHOW_CERTAIN_DEBUG_MESSAGE(DEBUG_BFS, 
+                    std::string("  - Checking Adj Position (") 
+                        + std::to_string(nx) + ", " + std::to_string(ny) + ")");
 
                 // 不需要访问已经访问过或者是障碍物的节点
                 // 这里必须先判断 new_graph.getPos(nx, ny) 因为 vis.getPos(nx, ny) 没有边界安全
@@ -61,11 +67,8 @@ public:
             }
         }
 
-        if(DEBUG_BFS) {
-            std::cerr << "BFS Finished" << std::endl;
-        }
-
         // 返回哪些位置能访问
+        SHOW_CERTAIN_DEBUG_MESSAGE(DEBUG_BFS, "BFS Finished");
         return vis;
     }
 };
