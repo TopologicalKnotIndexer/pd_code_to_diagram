@@ -100,10 +100,11 @@ public:
         if(!suc) { 
             SHOW_DEBUG_MESSAGE(
                 std::string("failed after ") 
-                + std::to_string(max_try) 
-                + std::string(" try."));
+                + std::to_string(max_try) + std::string(" try."));
+
+            // 抛出最大尝试超过异常
+            THROW_EXCEPTION(MaxTryExceeded, "");
         }
-        ASSERT(suc);
         return ans;
     }
 

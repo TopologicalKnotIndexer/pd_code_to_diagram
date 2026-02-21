@@ -34,3 +34,6 @@ DEFINE_EXCEPTION(BadBorderException);
 // 扭结 crossing 重合带来的异常
 // 这个异常在随机过程中经常不满足，需要多次尝试
 DEFINE_EXCEPTION(CrossingMeetException);
+
+// 超过了最大尝试次数
+DEFINE_EXCEPTION(MaxTryExceeded);

@@ -1,4 +1,5 @@
 import sys
+import time
 
 def is_windows_by_sys() -> bool:
     """
@@ -18,6 +19,7 @@ PD_CODE      = os.path.join(DIRNOW, "pd_code")
 COORD3D      = os.path.join(DIRNOW, "coord3d")
 DIAGRAM      = os.path.join(DIRNOW, "diagram")
 DIAGRAM_ZERO = os.path.join(DIRNOW, "diagram_0")
+DIAGRAM_TEST = os.path.join(DIRNOW, "diagram_test")
 
 def run_with_redirect(cmd:list[str], stdin_path=None, stdout_path=None, encoding="utf-8"):
     """
@@ -84,10 +86,14 @@ def process_all_file(pre:list, perfile:list, after:list):
         item()
 
 def output_template(aim_dir:str, cmd:list[str]):
+    begin_time = time.time()
     process_all_file([
         lambda: os.makedirs(aim_dir, exist_ok=True)
     ], [
-        lambda x, idx, total: print((idx + 1), "/", total, os.path.basename(x)),
+        lambda x, idx, total: print(
+            f"{time.time() - begin_time:7.3f}", 
+            f"{idx + 1:4d}", "/", total, os.path.basename(x)),
+        
         lambda x, idx, total: (run_with_redirect([A_EXE] + cmd, 
                                      x, os.path.join(aim_dir, os.path.basename(x))))
     ], [])
@@ -104,5 +110,9 @@ def create_all_diagram():
 def create_all_diagram_zero():
     output_template(DIAGRAM_ZERO, ["-d", "-z"])
 
+# 测试同一个 pd_code 是否能总保证任何连通分支都有暴露在外面的构型
+def create_all_diagram_test():
+    output_template(DIAGRAM_TEST, ["-t"])
+
 if __name__ == "__main__":
-    create_all_diagram_zero()
+    create_all_diagram_test()

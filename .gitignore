@@ -1,5 +1,6 @@
 data/diagram_0/*
 data/diagram/*
+data/diagram_test/*
 
 # Project Settings
 .vscode/*.json
