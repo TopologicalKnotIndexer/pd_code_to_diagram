@@ -1,51 +1,28 @@
-# PD_CODE_TO_DIAGRAM
+## pd_code_to_diagram
+given a pd_code for a topological link or knot, output a possible 2d-diagram.
 
-给定一个合法的 PD_CODE，程序将输出一个扭结的放置方案，最终将扭结放置到一个网格图中。
+## Install
 
-## 编译项目
 ```bash
-g++ -std=c++17 -g -o pdcode_to_diagram.exe src/main.cpp 
+pip install pd-code-to-diagram
 ```
 
-## 运行项目
+## Usage
+```python
+import pd_code_to_diagram
 
-### 从文件读入扭结
+# pd_code is a list of list of int
+pd_code = [[6, 1, 7, 2], [14, 7, 15, 8], [4, 15, 1, 16], [10, 6, 11, 5], [8, 4, 9, 3], [18, 11, 19, 12], [20, 17, 5, 18], [12, 19, 13, 20], [16, 10, 17, 9], [2, 14, 3, 13]]
 
-先把一个扭结或者链环的 PD_CODE 存储到指定文件中（例如 `pdcode.txt`），下面给出了一个 PD_CODE 示例：
+# last_socket should be int or None
+#   the program will ensure in the components contains last_socket
+#   there will be at least one arc on the border of 
+last_socket = 1
+
+# diagram_2d will be a matrix of int
+#   its type will be list of list of int
+#   get_diagram_from_pd_code will raise an RuntimeError if such diagram not exists
+diagram_2d = pd_code_to_diagram.get_diagram_from_pd_code(pd_code, last_socket)
+for line in diagram_2d:
+    print(line)
 ```
-[[6, 1, 7, 2], [8, 3, 5, 4], [2, 5, 3, 6], [4, 7, 1, 8]]
-```
-
-然后运行编译得到的程序。
-
-1. 带参数 `--serial` 或 `-s` 运行可以让程序输出三维空间坐标表示的扭结信息。
-```bash
-pdcode_to_diagram.exe --serial <pdcode.txt
-```
-
-2. 带 `--diagram` 或者 `-d` 参数运行可以让程序输出一个直观的扭结在二维空间中的布局图。
-```bash
-pdcode_to_diagram.exe --diagram <pdcode.txt
-```
-
-3. 在带 `--diagram` 或者 `-d` 的基础上，使用 `--with_zero` 或者 `-z` 参数可以让布局图中使用 `0` 填补空位。
-```bash
-pdcode_to_diagram.exe --diagram --with_zero <pdcode.txt
-```
-注：在没有 `--diagram` 以及 `-d` 的前提下，使用 `--with_zero` 或者 `-z` 不会对程序产生影响。
-
-4. 使用 `--border` 或者 `-b` 展示布局图中位于边界上的点。
-```bash
-pdcode_to_diagram.exe --border <pdcode.txt
-```
-
-### 从标准输入读入扭结
-
-如果您试图从标准输入读入扭结，请注意您需要为标准输入引入 EOF，具体而言：
-
-1. 对 Windows 类操作系统，在输入完全部数据后，你还需要连续输入 Enter, Ctrl+Z, Enter 三个按键。
-2. 对类 Unix 操作系统（Linux, Mac OS 等等），在输入完全部数据后，你还需要连续输入 Enter, Ctrl+D, Enter 三个按键。
-
-## 程序原理
-
-现在底图上跑一个最大边数生成森林（森林即生成树的不交并），保证森林中树边均满足折线段段数为一，再进行后续边连接。

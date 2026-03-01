@@ -1,0 +1,25 @@
+[project]
+name = "pd-code-to-diagram"
+version = "0.0.1"
+description = "calculate 2d-diagram from pd_code."
+authors = [
+    {name = "GGN_2015",email = "neko@jlulug.org"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "cpp-simple-interface",
+    "pd-code-sanity"
+]
+include = [
+    { path = "pd_code_to_diagram/cpp_src", format = ["sdist", "wheel"] }
+]
+exclude = [
+    "pd_code_to_diagram/bin/",
+    "**/__pycache__/"
+]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
