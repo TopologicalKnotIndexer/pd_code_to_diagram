@@ -78,14 +78,31 @@ def get_diagram_from_pd_code(
         arr.append(line_now)
     return arr
 
+# 得到平面图的序列化表示
+def get_diagram_str_from_pd_code(
+        pd_code:list[list[int]], border_val:Optional[int]=None) -> str:
+    diagram_matrix = get_diagram_from_pd_code(pd_code, border_val)
+
+    # 计算最大长度
+    max_len = 0
+    for line in diagram_matrix:
+        for val in line:
+            max_len = max(max_len, len(str(val)))
+    max_len += 1
+
+    ans = ""
+    for line in diagram_matrix:
+        line_now = ""
+        for item in line:
+            if item == 0:
+                line_now += (" " * max_len)
+            else:
+                line_now += ("%" + str(max_len) + "d") % item
+        ans += line_now + "\n"
+    return ans
+
 if __name__ == "__main__":
-    L10a1 = [[6, 1, 7, 2], [14, 7, 15, 8], [4, 15, 1, 16], [10, 6, 11, 5], [8, 4, 9, 3], [18, 11, 19, 12], [20, 17, 5, 18], [12, 19, 13, 20], [16, 10, 17, 9], [2, 14, 3, 13]]
+    link = [[2, 9, 3, 10], [4, 11, 5, 12], [6, 7, 1, 8], [8, 5, 7, 6], [10, 1, 11, 2], [12, 3, 9, 4]]
     
     with open("test.txt", "w") as fp:
-        for line in get_diagram_from_pd_code(L10a1, border_val=1):
-            for term in line:
-                if term != 0:
-                    fp.write(f"{term:4d}")
-                else:
-                    fp.write("    ")
-            fp.write("\n")
+        fp.write(get_diagram_str_from_pd_code(link))
