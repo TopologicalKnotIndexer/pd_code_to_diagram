@@ -11,7 +11,7 @@ except:
 DIRNOW = os.path.dirname(os.path.abspath((__file__)))
 CPP_MAIN = os.path.join(DIRNOW, "cpp_src", "main.cpp")
 BIN_FOLDER = os.path.join(DIRNOW, "bin")
-EXE_FILE = os.path.join(BIN_FOLDER, "a.exe")
+EXE_FILE = os.path.join(BIN_FOLDER, "pd_code_to_diagram.exe")
 
 # 确保 exe 文件已经存在
 def create_exe_file() -> tuple[bool, str]:
