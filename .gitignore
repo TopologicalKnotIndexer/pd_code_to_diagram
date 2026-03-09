@@ -6,6 +6,11 @@ test.txt
 # Project Settings
 .vscode/*.json
 
+# Compiled python file
+*.pyc
+*.whl
+dist/*
+
 # Prerequisites
 *.d
 
