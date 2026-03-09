@@ -30,4 +30,7 @@ for line in diagram_2d:
 link = [[2, 9, 3, 10], [4, 11, 5, 12], [6, 7, 1, 8], [8, 5, 7, 6], [10, 1, 11, 2], [12, 3, 9, 4]]
 with open("test.txt", "w") as fp:
     fp.write(pd_code_to_diagram.get_diagram_str_from_pd_code(link, last_socket))
+
+diagram_now = pd_code_to_diagram.get_diagram_from_pd_code(link, last_socket)
+print(pd_code_to_diagram.diagram_to_pd_code(diagram_now))
 ```

@@ -104,5 +104,7 @@ def get_diagram_str_from_pd_code(
 if __name__ == "__main__":
     link = [[2, 9, 3, 10], [4, 11, 5, 12], [6, 7, 1, 8], [8, 5, 7, 6], [10, 1, 11, 2], [12, 3, 9, 4]]
     
+    print(get_diagram_from_pd_code(link))
+
     with open("test.txt", "w") as fp:
         fp.write(get_diagram_str_from_pd_code(link))
