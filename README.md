@@ -33,4 +33,20 @@ with open("test.txt", "w") as fp:
 
 diagram_now = pd_code_to_diagram.get_diagram_from_pd_code(link, last_socket)
 print(pd_code_to_diagram.diagram_to_pd_code(diagram_now))
+
+# save diagram_2d as a png image
+pd_code_to_diagram.diagram_to_png(diagram_now, "diagram.png")
+
+# get a PIL.Image.Image object instead of writing a file
+image = pd_code_to_diagram.diagram_to_image(diagram_now)
+
+# optionally resize every grid tile, default tile size is 30 pixels
+pd_code_to_diagram.diagram_to_png(diagram_now, "diagram_20px.png", tile_size=20)
+
+# optionally draw small red labels for the four socket ids around each crossing
+pd_code_to_diagram.diagram_to_png(diagram_now, "diagram_labeled.png", show_socket_labels=True)
 ```
+
+In the diagram matrix, `0` means empty space, positive integers mean arc ids, `-1`
+means the vertical strand is under the horizontal strand, and `-2` means the
+horizontal strand is under the vertical strand.

@@ -1,6 +1,6 @@
 [project]
 name = "pd-code-to-diagram"
-version = "0.0.4"
+version = "0.0.5"
 description = "calculate 2d-diagram from pd_code."
 authors = [
     {name = "GGN_2015",email = "neko@jlulug.org"}
@@ -10,10 +10,12 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "cpp-simple-interface",
-    "pd-code-sanity"
+    "pd-code-sanity",
+    "pillow",
+    "pd_code_sanity"
 ]
 include = [
-    { path = "pd_code_to_diagram/cpp_src", format = ["sdist", "wheel"] }
+    { path = "pd_code_to_diagram/cpp_src", format = ["sdist", "wheel"] },
 ]
 exclude = [
     "pd_code_to_diagram/bin/",
