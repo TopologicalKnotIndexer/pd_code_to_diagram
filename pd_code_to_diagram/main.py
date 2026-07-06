@@ -1,3 +1,5 @@
+import json
+
 import cpp_simple_interface
 import pd_code_sanity
 import os
@@ -5,8 +7,10 @@ from typing import Optional
 
 try:
     from .run_file import run_program_with_input
+    from .from_diagram import diagram_to_pd_code
 except:
     from run_file import run_program_with_input
+    from from_diagram import diagram_to_pd_code
 
 DIRNOW = os.path.dirname(os.path.abspath((__file__)))
 CPP_MAIN = os.path.join(DIRNOW, "cpp_src", "main.cpp")
@@ -100,6 +104,71 @@ def get_diagram_str_from_pd_code(
                 line_now += ("%" + str(max_len) + "d") % item
         ans += line_now + "\n"
     return ans
+
+def pd_code_diagram_sanity(pd_code: list[list[int]], *args, **kwargs) -> tuple[bool, list[list[int]]]:
+    pd_code = sorted(json.loads(json.dumps(pd_code)))
+
+    def _add_arc(nxt: dict[int, set[int]], a: int, b: int):
+        if a not in nxt:
+            nxt[a] = set()
+        nxt[a].add(b)
+        nxt[a] = set(sorted(nxt[a]))
+
+    def _add_edge(nxt: dict[int, set[int]], a: int, b: int):
+        _add_arc(nxt, a, b)
+        _add_arc(nxt, b, a)
+
+    nxt = {}
+    for crossing in pd_code:
+        _add_edge(nxt, crossing[0], crossing[2])
+        _add_edge(nxt, crossing[1], crossing[3])
+
+    node_set_dict = {}
+
+    def _dfs(node: int, nxt: dict[int, set[int]], root: int, vis: dict[int, int]):
+        vis[node] = root
+        node_set_dict[root].add(node)
+        for nxt_node in sorted(nxt[node]):
+            if nxt_node in vis:
+                continue
+            _dfs(nxt_node, nxt, root, vis)
+
+    vis = {}
+    for node in sorted(nxt):
+        if node in vis:
+            continue
+        node_set_dict[node] = set()
+        _dfs(node, nxt, node, vis)
+
+    # 构建节点编号列表
+    node_list_dict = {
+        root: sorted(list(node_set_dict[root]))
+        for root in node_set_dict
+    }
+
+    # 计算节点真正的后继节点
+    real_nxt = {}
+    for _, nodes in node_list_dict.items():
+        for i, node in enumerate(nodes):
+            nxt_node = nodes[(i + 1) % len(nodes)]
+            real_nxt[node] = nxt_node
+
+    # 至少保证确实是后继
+    for crossing in pd_code:
+        a, b, c, d = crossing
+        if real_nxt[a] != c and real_nxt[c] != a:
+            return False, []
+    
+    # 构建新顺序
+    for i in range(len(pd_code)):
+        if real_nxt[pd_code[i][0]] != pd_code[i][2]:
+            pd_code[i] = pd_code[i][2:4] + pd_code[i][0:2] # 循环左移两位
+            assert real_nxt[pd_code[i][0]] == pd_code[i][2]
+
+    diagram = get_diagram_from_pd_code(pd_code, *args, **kwargs)
+    new_pd_code = sorted(diagram_to_pd_code(diagram))
+    return (pd_code == new_pd_code), new_pd_code
+
 
 if __name__ == "__main__":
     link = [[2, 9, 3, 10], [4, 11, 5, 12], [6, 7, 1, 8], [8, 5, 7, 6], [10, 1, 11, 2], [12, 3, 9, 4]]

@@ -34,8 +34,9 @@ with open("test.txt", "w") as fp:
 diagram_now = pd_code_to_diagram.get_diagram_from_pd_code(link, last_socket)
 print(pd_code_to_diagram.diagram_to_pd_code(diagram_now))
 
-# Check pd_code -> diagram -> pd_code consistency
-print(pd_code_to_diagram.pd_code_sanity(link))
+# Check pd_code -> diagram -> pd_code consistency (bool, new_pdcode)
+# new_pdcode = None, if error
+print(pd_code_to_diagram.pd_code_diagram_sanity(link))
 
 # save diagram_2d as a png image
 pd_code_to_diagram.diagram_to_png(diagram_now, "diagram.png")
