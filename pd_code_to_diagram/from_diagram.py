@@ -1,3 +1,5 @@
+from typing import Optional
+
 # 由于扭结可能有定向冲突问题
 # 因此需要编写一个从 diagram 到 pd_code 的检查来保证确实是同一个 pd_code
 
@@ -96,7 +98,8 @@ def process_len_2_components(
         diagram:list[list[int]], 
         row_cnt:int, col_cnt:int, 
         len_2_components:list[set[int]], 
-        direction_matrix:list[list]):
+        direction_matrix:list[list],
+        verbose:bool=False) -> None:
     
     for component_set in len_2_components:
         
@@ -139,7 +142,6 @@ def process_len_2_components(
                 direction_matrix[xi + DX[d]][xj + DY[d]] = get_dir(
                     xi, xj, xi + DX[d], xj + DY[d], direction_matrix[xi + DX[d]][xj + DY[d]]
                 )
-            return
         
         else:
             
@@ -175,22 +177,73 @@ def process_len_2_components(
                         )
                         if not isinstance(direction_matrix[xi + DX[d]][xj + DY[d]], int):
                             raise AssertionError()
-            return
+
+    # 统计每种数字出现的次数
+    number_cnt = {}
+    for i in range(row_cnt):
+        for j in range(col_cnt):
+            if diagram[i][j] > 0:
+                number = diagram[i][j]
+                if number not in number_cnt:
+                    number_cnt[number] = 0
+                number_cnt[number] += 1
+
+    # 把仅仅出现了一次的数字，设置为 -1，表示这个位置的方向需要额外推测
+    for i in range(row_cnt):
+        for j in range(col_cnt):
+            if diagram[i][j] > 0 and number_cnt[diagram[i][j]] == 1:
+                direction_matrix[i][j] = -1
 
 def get_pd_code_crossing(
         diagram:list[list[int]], 
         direction_matrix:list[list], 
-        xi:int, xj:int) -> list[int]:
+        xi:int, xj:int,
+        verbose:bool=False) -> Optional[list[int]]:
+    
+    if verbose:
+        print("get_pd_code_crossing: xi = {}, xj = {}".format(xi, xj))
+        for i in range(3):
+            for j in range(3):
+                if diagram[xi - 1 + i][xj - 1 + j] != 0:
+                    print(f"{diagram[xi - 1 + i][xj - 1 + j]:5d}", end="")
+                else:
+                    print("     ", end="")
+            print()  # 换行
+        for i in range(3):
+            for j in range(3):
+                if direction_matrix[xi - 1 + i][xj - 1 + j] != "":
+                    print(f"{str(direction_matrix[xi - 1 + i][xj - 1 + j]):5s}", end="")
+                else:
+                    print("     ", end="")
+            print()  # 换行
     
     dir = ["", "", "", ""]
     for d in range(4):
         diretion_now = direction_matrix[xi + DX[d]][xj + DY[d]]
+        if diretion_now == -1: # 这个位置的方向需要额外推测
+            continue
         if diretion_now not in [d, (d + 2) % 4]:
             raise AssertionError()
         if diretion_now == d:
             dir[d] = "out"
         else:
             dir[d] = "in"
+
+    for i in range(4):
+        if dir[i] == "":
+            if dir[(i+2) % 4] == "in":
+                dir[i] = "out"
+                direction_matrix[xi + DX[i]][xj + DY[i]] = i
+            elif dir[(i+2) % 4] == "out":
+                dir[i] = "in"
+                direction_matrix[xi + DX[i]][xj + DY[i]] = (i + 2) % 4
+
+            else:
+                # 遇到了两头需要推测的情况，无法确定方向
+                return None
+
+    if verbose:
+        print("dir = {}".format(dir))
     
     if diagram[xi][xj] == -1:
         dir_set = [1, 3]
@@ -216,7 +269,7 @@ def get_pd_code_crossing(
     ]
 
 # 注意由于 len2 分支有多种合法定向，所以结果可能不唯一
-def diagram_to_pd_code(diagram:list[list[int]]) -> list[list[int]]:
+def diagram_to_pd_code(diagram:list[list[int]], verbose:bool=False) -> list[list[int]]:
 
     if not isinstance(diagram, list):
         raise TypeError()
@@ -234,6 +287,7 @@ def diagram_to_pd_code(diagram:list[list[int]]) -> list[list[int]]:
     # 先检查矩阵的形状规则
     row_cnt = len(diagram)
     col_cnt = len(diagram[0])
+    crossing_cnt = 0
 
     # 检查每一行元素个数相同
     # 由于我们只能对 diagram 做检查
@@ -249,6 +303,16 @@ def diagram_to_pd_code(diagram:list[list[int]]) -> list[list[int]]:
     direction_matrix = [
         ["" for _ in range(col_cnt)]
         for _ in range(row_cnt)]
+    
+    if verbose:
+        print("diagram_to_pd_code: row_cnt = {}, col_cnt = {}".format(row_cnt, col_cnt))
+        for i in range(row_cnt):
+            for j in range(col_cnt):
+                if diagram[i][j] != 0:
+                    print(f"{diagram[i][j]:5d}", end="")
+                else:
+                    print("     ", end="")
+            print()  # 换行
 
     # 确定前驱后继关系，并从中得到长度为 2 的连通分支
     pre, nxt = get_pre_nxt_from_diagram(diagram, row_cnt, col_cnt)
@@ -257,15 +321,34 @@ def diagram_to_pd_code(diagram:list[list[int]]) -> list[list[int]]:
         if pre[item] == nxt[item] and set([item, pre[item]]) not in len_2_components:
             len_2_components.append(set([item, pre[item]])) # 找到长度为 2 的连通分支
     
+    if verbose:
+        print("pre = {}".format(pre))
+        print("nxt = {}".format(nxt))
+        print("len_2_components = {}".format(len_2_components))
+
     # 处理所有长度为 2 的连通分支，处理后就不用处理了
     if len(len_2_components) != 0:
-        process_len_2_components(diagram, row_cnt, col_cnt, len_2_components, direction_matrix)
+        process_len_2_components(diagram, row_cnt, col_cnt, len_2_components, direction_matrix, verbose=verbose)
+
+    if verbose:
+        print("direction_matrix after process_len_2_components:")
+        for i in range(row_cnt):
+            for j in range(col_cnt):
+                if diagram[i][j] != 0:
+                    idx_str = f"{diagram[i][j]}"
+                    if direction_matrix[i][j] != "":
+                        idx_str += f"({direction_matrix[i][j]})"
+                    print(f"{idx_str:8s}", end="")
+                else:
+                    print(" "*8, end="")
+            print()  # 换行
     
     # 枚举交叉点
     for xi in range(row_cnt):
         for xj in range(col_cnt):
             if diagram[xi][xj] >= 0: # 跳过非交叉点
                 continue
+            crossing_cnt += 1
             for d in range(4):
                 if direction_matrix[xi + DX[d]][xj + DY[d]] == "":
                     hr_val = diagram[xi + DX[d]][xj + DY[d]]
@@ -288,13 +371,18 @@ def diagram_to_pd_code(diagram:list[list[int]]) -> list[list[int]]:
     
     # 完成了所有交叉点的定向
     pd_code = []
-    for xi in range(row_cnt):
-        for xj in range(col_cnt):
-            if diagram[xi][xj] >= 0: # 跳过非交叉点
-                continue
-            pd_code.append(get_pd_code_crossing(diagram, direction_matrix, xi, xj))
+    while len(pd_code) < crossing_cnt:
+        for xi in range(row_cnt):
+            for xj in range(col_cnt):
+                if diagram[xi][xj] >= 0: # 跳过非交叉点
+                    continue
+                new_crossing = get_pd_code_crossing(diagram, direction_matrix, xi, xj, verbose=verbose)
+                if new_crossing is not None:
+                    pd_code.append(new_crossing)
     return sorted(pd_code)
 
 if __name__ == "__main__":
-    diagram_now = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 11, 11, 11, 11, -2, 10, 10, 10, 10, 0, 0, 0], [0, 0, 0, 1, 0, 11, 0, 0, 0, 2, 0, 0, 0, 10, 0, 0, 0], [0, 0, 0, 1, 0, 11, 0, 9, 9, -1, 10, 10, 10, 10, 0, 0, 0], [0, 0, 0, 1, 0, 11, 0, 9, 0, 3, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 11, 0, 9, 9, -2, 12, 12, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 11, 0, 0, 0, 4, 0, 12, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 11, 11, 11, 11, -1, 12, 12, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0], [0, 8, 8, -1, 7, 7, 7, 7, 7, -2, 8, 8, 8, 8, 8, 8, 0], [0, 8, 0, 6, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 8, 0], [0, 8, 0, 6, 6, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 8, 0], [0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0], [0, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+    # diagram_now = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 11, 11, 11, 11, -2, 10, 10, 10, 10, 0, 0, 0], [0, 0, 0, 1, 0, 11, 0, 0, 0, 2, 0, 0, 0, 10, 0, 0, 0], [0, 0, 0, 1, 0, 11, 0, 9, 9, -1, 10, 10, 10, 10, 0, 0, 0], [0, 0, 0, 1, 0, 11, 0, 9, 0, 3, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 11, 0, 9, 9, -2, 12, 12, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 11, 0, 0, 0, 4, 0, 12, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 11, 11, 11, 11, -1, 12, 12, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0], [0, 8, 8, -1, 7, 7, 7, 7, 7, -2, 8, 8, 8, 8, 8, 8, 0], [0, 8, 0, 6, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 8, 0], [0, 8, 0, 6, 6, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 8, 0], [0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0], [0, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+    # print(diagram_to_pd_code(diagram_now))
+    diagram_now = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 5, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 5, 0, 0, 0, 12, 12, 12, 12, -1, 11, 11, 11, 11, 11, 11, 11, 11, 0, 0, 0, 0, 0, 0, 0], [0, 5, 0, 0, 0, 12, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0], [0, 5, 0, 0, 0, 12, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 11, 0, 10, 10, 10, 10, 10, 0], [0, 5, 0, 0, 0, 12, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 11, 0, 10, 0, 0, 0, 10, 0], [0, 5, 0, 0, 0, 12, 0, 15, 15, -2, 14, 14, 0, 0, 0, 0, 0, 11, 11, -1, 18, 18, 0, 10, 0], [0, 5, 0, 0, 0, 12, 0, 15, 0, 3, 0, 14, 0, 0, 0, 0, 0, 0, 0, 9, 0, 18, 0, 10, 0], [0, 5, 0, 0, 0, 12, 0, 15, 15, -1, 16, -2, 17, 17, 17, 17, 17, 17, 17, -2, 18, 18, 0, 10, 0], [0, 5, 0, 0, 0, 12, 0, 0, 0, 2, 0, 13, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 10, 0], [0, 5, 0, 0, 0, 12, 0, 0, 0, 2, 0, 13, 0, 0, 0, 0, 0, 0, 0, 10, 10, 10, 10, 10, 0], [0, 5, 0, 0, 0, 12, 0, 0, 0, 2, 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 5, 0, 0, 0, 12, 12, 12, 12, -2, 13, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 5, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 5, 0, 0, 0, 0, 0, 0, 0, 1, 0, 5, 5, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 5, 0, 0, 0, 0, 0, 0, 0, 1, 0, 5, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 5, 0, 8, 8, 8, 8, 8, 8, -1, 7, -2, 8, 8, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 5, 0, 8, 0, 0, 0, 0, 0, 6, 0, 6, 0, 8, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 5, 0, 8, 0, 0, 0, 0, 0, 6, 6, 6, 0, 8, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 5, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 5, 0, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
     print(diagram_to_pd_code(diagram_now))
