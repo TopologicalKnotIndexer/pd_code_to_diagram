@@ -28,18 +28,25 @@ public:
 
         SHOW_DEBUG_MESSAGE("input pd_code ...");
         PDCode pd_code;
-        pd_code.InputPdCode(pd_code_ss); // 输入一个 pd_code
+        if(!pd_code.InputPdCode(pd_code_ss)) {
+            throw std::invalid_argument("invalid PD code");
+        }
 
         SHOW_DEBUG_MESSAGE("generating pd_tree ...");
         PDTree pd_tree;
 
         // 生成树形图直到没有交叉点重叠
-        while(true) {
+        bool tree_ready = false;
+        for(int tree_attempt = 0; tree_attempt < 1000; tree_attempt += 1) {
             pd_tree.clear();
             pd_tree.load(pd_code, last_socket_id); // 生成树形图
             if(pd_tree.checkNoOverlay()) {
+                tree_ready = true;
                 break;
             }
+        }
+        if(!tree_ready) {
+            THROW_EXCEPTION(CrossingMeetException, "could not place a non-overlapping tree");
         }
 
         SHOW_DEBUG_MESSAGE("generating and checking socket_info ...");
@@ -111,7 +118,9 @@ public:
     // 给定一个 pd_code，计算其中的所有连通分支
     virtual std::vector<std::set<int>> getAllCc(std::stringstream& pd_code_ss) const {
         PDCode pd_code;
-        pd_code.InputPdCode(pd_code_ss); // 输入一个 pd_code
+        if(!pd_code.InputPdCode(pd_code_ss)) {
+            throw std::invalid_argument("invalid PD code");
+        }
 
         // 构建一个双向图
         Graph node_graph;

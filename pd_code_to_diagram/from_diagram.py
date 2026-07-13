@@ -268,6 +268,31 @@ def get_pd_code_crossing(
         for i in range(4)
     ]
 
+
+def _resolve_crossings(
+        diagram:list[list[int]],
+        direction_matrix:list[list],
+        crossing_positions:list[tuple[int, int]],
+        verbose:bool=False) -> list[list[int]]:
+    """Resolve every crossing once, failing if an iteration makes no progress."""
+
+    unresolved = set(crossing_positions)
+    resolved: dict[tuple[int, int], list[int]] = {}
+    while unresolved:
+        progress = False
+        for xi, xj in sorted(unresolved):
+            crossing = get_pd_code_crossing(
+                diagram, direction_matrix, xi, xj, verbose=verbose
+            )
+            if crossing is not None:
+                resolved[(xi, xj)] = crossing
+                unresolved.remove((xi, xj))
+                progress = True
+        if not progress:
+            positions = ", ".join(f"({x},{y})" for x, y in sorted(unresolved))
+            raise ValueError(f"could not infer orientations at crossings: {positions}")
+    return [resolved[position] for position in sorted(resolved)]
+
 # 注意由于 len2 分支有多种合法定向，所以结果可能不唯一
 def diagram_to_pd_code(diagram:list[list[int]], verbose:bool=False) -> list[list[int]]:
 
@@ -287,7 +312,7 @@ def diagram_to_pd_code(diagram:list[list[int]], verbose:bool=False) -> list[list
     # 先检查矩阵的形状规则
     row_cnt = len(diagram)
     col_cnt = len(diagram[0])
-    crossing_cnt = 0
+    crossing_positions = []
 
     # 检查每一行元素个数相同
     # 由于我们只能对 diagram 做检查
@@ -348,7 +373,7 @@ def diagram_to_pd_code(diagram:list[list[int]], verbose:bool=False) -> list[list
         for xj in range(col_cnt):
             if diagram[xi][xj] >= 0: # 跳过非交叉点
                 continue
-            crossing_cnt += 1
+            crossing_positions.append((xi, xj))
             for d in range(4):
                 if direction_matrix[xi + DX[d]][xj + DY[d]] == "":
                     hr_val = diagram[xi + DX[d]][xj + DY[d]]
@@ -369,17 +394,13 @@ def diagram_to_pd_code(diagram:list[list[int]], verbose:bool=False) -> list[list
                     if not isinstance(direction_matrix[xi + DX[d]][xj + DY[d]], int):
                         raise AssertionError()
     
-    # 完成了所有交叉点的定向
-    pd_code = []
-    while len(pd_code) < crossing_cnt:
-        for xi in range(row_cnt):
-            for xj in range(col_cnt):
-                if diagram[xi][xj] >= 0: # 跳过非交叉点
-                    continue
-                new_crossing = get_pd_code_crossing(diagram, direction_matrix, xi, xj, verbose=verbose)
-                if new_crossing is not None:
-                    pd_code.append(new_crossing)
-    return sorted(pd_code)
+    # Resolve each crossing exactly once. An ambiguous matrix is rejected
+    # instead of looping forever or appending duplicate crossings.
+    return sorted(
+        _resolve_crossings(
+            diagram, direction_matrix, crossing_positions, verbose=verbose
+        )
+    )
 
 if __name__ == "__main__":
     # diagram_now = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 11, 11, 11, 11, -2, 10, 10, 10, 10, 0, 0, 0], [0, 0, 0, 1, 0, 11, 0, 0, 0, 2, 0, 0, 0, 10, 0, 0, 0], [0, 0, 0, 1, 0, 11, 0, 9, 9, -1, 10, 10, 10, 10, 0, 0, 0], [0, 0, 0, 1, 0, 11, 0, 9, 0, 3, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 11, 0, 9, 9, -2, 12, 12, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 11, 0, 0, 0, 4, 0, 12, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 11, 11, 11, 11, -1, 12, 12, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0], [0, 8, 8, -1, 7, 7, 7, 7, 7, -2, 8, 8, 8, 8, 8, 8, 0], [0, 8, 0, 6, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 8, 0], [0, 8, 0, 6, 6, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 8, 0], [0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0], [0, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]

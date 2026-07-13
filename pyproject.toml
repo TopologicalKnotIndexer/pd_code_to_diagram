@@ -9,8 +9,6 @@ license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "cpp-simple-interface",
-    "pd-code-sanity>=0.1.0",
     "pillow"
 ]
 include = [

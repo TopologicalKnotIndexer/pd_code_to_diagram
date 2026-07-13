@@ -21,7 +21,7 @@ print(len(diagram), len(diagram[0]))
 
 ## Algorithm
 
-The bundled C++ engine builds a crossing/socket tree, incrementally places crossings, and routes arcs through a grid path engine while avoiding occupied cells and preserving crossing over/under data. Python converts the matrix to cached antialiased Pillow tiles or traces a supported matrix back into crossing records. Matrix values use `0` for empty cells, positive integers for arcs, and negative values for the two crossing orientations.
+The bundled C++ engine builds a crossing/socket tree, incrementally places crossings, and routes arcs through a grid path engine while avoiding occupied cells and preserving crossing over/under data. Python converts the matrix to cached antialiased Pillow tiles or traces a supported matrix back into crossing records. Matrix values use `0` for empty cells, positive integers for arcs, and negative values for the two crossing orientations. Layout and orientation inference use bounded retries and fail explicitly when a matrix is ambiguous.
 
 ## Input conventions
 
@@ -29,18 +29,19 @@ A PD code is represented as a list of four-entry crossings. Arc labels normally 
 
 ## External software
 
-- A C++17 compiler such as GCC or Clang is required on first use to build the bundled layout executable.
+- A C++17 compiler such as GCC or Clang is required on first use to build the bundled layout executable. The build uses only Python's standard library and recompiles when a bundled source changes.
 - No GUI is required.
 - Writing PNG images requires normal filesystem access.
 
 ## Development
 
-Run examples and package checks before release. Python packages require Python 3.10 or newer. Build PyPI artifacts with:
+Python 3.10 or newer is required. Run the regression and C++ round-trip tests with:
 
 ```bash
-poetry check
-poetry build
+python -m unittest discover -s tests -v
 ```
+
+No PyPI publication is performed as part of repository maintenance.
 
 ## License
 

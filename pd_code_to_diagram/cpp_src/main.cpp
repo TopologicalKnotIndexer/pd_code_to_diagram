@@ -106,6 +106,10 @@ void try_many_times(unsigned int min_seed, int last_socket_id, std::stringstream
     if(test_all_border) {
         std::cout << suc_cnt << " / " << total_cnt << std::endl;
     }
+
+    if(calc_ans.empty()) {
+        THROW_EXCEPTION(MaxTryExceeded, "no requested layout succeeded");
+    }
     
     // 针对非测试状态编写的代码
     {
