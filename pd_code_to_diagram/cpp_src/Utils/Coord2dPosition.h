@@ -82,7 +82,7 @@ public:
 
     // 计算坐标位置之间的点乘积
     static Coord2dType dot(Coord2dPosition pos1, Coord2dPosition pos2) {
-        return pos1.x * pos2.x, pos1.y * pos2.y;
+        return pos1.x * pos2.x + pos1.y * pos2.y;
     }
 
     // 计算坐标位置是否相等
